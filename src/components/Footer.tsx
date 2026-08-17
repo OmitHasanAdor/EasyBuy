@@ -1,199 +1,139 @@
-import Link from "next/link";
+import { Globe } from "lucide-react";
 import {
-  Facebook,
-  Github,
-  Instagram,
-  Mail,
-  MapPin,
-  Phone,
-  Twitter,
-} from "lucide-react";
+  FaInstagram,
+  FaFacebookF,
+  FaPinterestP,
+  FaYoutube,
+  FaApple,
+  FaGooglePlay,
+} from "react-icons/fa";
 
-const Footer = () => {
+const shopLinks = [
+  "Gift cards",
+  "Brand Registry",
+  "Sitemap",
+  "Blog",
+  "United Kingdom",
+  "Germany",
+  "Canada",
+];
+
+const sellLinks = ["Sell with us", "Teams", "Forums", "Affiliates & Creators"];
+
+const aboutLinks = [
+  "Company, Inc.",
+  "Policies",
+  "Investors",
+  "Careers",
+  "Press",
+  "Impact",
+  "Legal imprint",
+];
+
+const helpLinks = ["Help Center", "Privacy settings"];
+
+const bottomLinks = [
+  "Terms of Use",
+  "Privacy",
+  "Interest-based ads",
+  "Local Shops",
+  "Regions",
+];
+
+function FooterColumn({ title, links }: { title: string; links: string[] }) {
   return (
-    <footer className="border-t bg-slate-950 text-slate-300">
-      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
-          <div>
-            <Link
-              href="/"
-              className="text-2xl font-bold tracking-tight text-white"
+    <div className="min-w-40">
+      <h3 className="mb-4 text-sm font-bold text-neutral-900">{title}</h3>
+      <ul className="flex flex-col gap-3">
+        {links.map((link) => (
+          <li key={link}>
+            <a
+              href="#"
+              className="text-[15px] text-neutral-700 hover:underline"
             >
-              Easy<span className="text-blue-500">Buy</span>
-            </Link>
+              {link}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-            <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
-              A simple and trusted marketplace where buyers discover great
-              products and sellers grow their businesses.
-            </p>
+export default function Footer() {
+  return (
+    <footer className="w-full bg-[#f3efe9] px-6 pb-6 pt-14 text-neutral-900 sm:px-10 lg:px-16">
+      {/* Mission headline */}
+      <h2 className="mb-10 max-w-xl font-serif text-4xl font-normal leading-tight sm:text-[44px]">
+        We&apos;re on a mission to
+        <br />
+        keep commerce human.
+      </h2>
 
-            <div className="mt-6 flex gap-3">
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="rounded-full bg-slate-900 p-2.5 transition hover:bg-blue-600 hover:text-white"
-              >
-                <Facebook size={18} />
-              </a>
+      {/* Link columns */}
+      <div className="mb-12 flex flex-wrap gap-12">
+        <FooterColumn title="Shop" links={shopLinks} />
+        <FooterColumn title="Sell" links={sellLinks} />
+        <FooterColumn title="About" links={aboutLinks} />
+        <FooterColumn title="Help" links={helpLinks} />
+      </div>
 
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="rounded-full bg-slate-900 p-2.5 transition hover:bg-pink-600 hover:text-white"
-              >
-                <Instagram size={18} />
-              </a>
+      {/* App badges */}
+      <div className="mb-14 flex flex-wrap gap-3">
+        <a
+          href="#"
+          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white"
+        >
+          <FaApple size={22} />
+          <span className="leading-tight">
+            <span className="block text-[11px]">Download on the</span>
+            <span className="block text-base font-semibold">App Store</span>
+          </span>
+        </a>
+        <a
+          href="#"
+          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white"
+        >
+          <FaGooglePlay size={20} />
+          <span className="leading-tight">
+            <span className="block text-[11px]">GET IT ON</span>
+            <span className="block text-base font-semibold">Google Play</span>
+          </span>
+        </a>
+      </div>
 
-              <a
-                href="#"
-                aria-label="Twitter"
-                className="rounded-full bg-slate-900 p-2.5 transition hover:bg-sky-500 hover:text-white"
-              >
-                <Twitter size={18} />
-              </a>
+      <hr className="mb-5 border-t border-[#ddd6c9]" />
 
-              <a
-                href="#"
-                aria-label="GitHub"
-                className="rounded-full bg-slate-900 p-2.5 transition hover:bg-slate-700 hover:text-white"
-              >
-                <Github size={18} />
-              </a>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-              Quick Links
-            </h3>
-
-            <ul className="mt-5 space-y-3 text-sm">
-              <li>
-                <Link
-                  href="/"
-                  className="transition hover:text-blue-500"
-                >
-                  Home
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/products"
-                  className="transition hover:text-blue-500"
-                >
-                  Products
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/categories"
-                  className="transition hover:text-blue-500"
-                >
-                  Categories
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/sellers"
-                  className="transition hover:text-blue-500"
-                >
-                  Sellers
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-              Support
-            </h3>
-
-            <ul className="mt-5 space-y-3 text-sm">
-              <li>
-                <Link
-                  href="/help"
-                  className="transition hover:text-blue-500"
-                >
-                  Help Center
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/privacy"
-                  className="transition hover:text-blue-500"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/terms"
-                  className="transition hover:text-blue-500"
-                >
-                  Terms & Conditions
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href="/refund"
-                  className="transition hover:text-blue-500"
-                >
-                  Refund Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-              Contact Us
-            </h3>
-
-            <ul className="mt-5 space-y-4 text-sm text-slate-400">
-              <li className="flex items-start gap-3">
-                <MapPin
-                  size={18}
-                  className="mt-0.5 shrink-0 text-blue-500"
-                />
-                <span>Dhaka, Bangladesh</span>
-              </li>
-
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="shrink-0 text-blue-500" />
-                <span>+880 1234-567890</span>
-              </li>
-
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="shrink-0 text-blue-500" />
-                <span>support@easybuy.com</span>
-              </li>
-            </ul>
-          </div>
+      {/* Bottom bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-neutral-700">
+        <div className="flex flex-wrap items-center gap-5">
+          <span className="flex items-center gap-1.5">
+            <Globe size={16} />
+            Bangladesh
+          </span>
+          <a href="#" aria-label="Instagram" className="hover:text-black">
+            <FaInstagram size={18} />
+          </a>
+          <a href="#" aria-label="Facebook" className="hover:text-black">
+            <FaFacebookF size={18} />
+          </a>
+          <a href="#" aria-label="Pinterest" className="hover:text-black">
+            <FaPinterestP size={18} />
+          </a>
+          <a href="#" aria-label="YouTube" className="hover:text-black">
+            <FaYoutube size={18} />
+          </a>
         </div>
 
-        {/* Bottom */}
-        <div className="mt-12 flex flex-col gap-4 border-t border-slate-800 pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {new Date().getFullYear()} EasyBuy. All rights reserved.
-          </p>
-
-          <p>
-            Built with ❤️ by the EasyBuy Team
-          </p>
+        <div className="flex flex-wrap items-center gap-5">
+          <span>© {new Date().getFullYear()} Company, Inc.</span>
+          {bottomLinks.map((link) => (
+            <a key={link} href="#" className="hover:underline">
+              {link}
+            </a>
+          ))}
         </div>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}
