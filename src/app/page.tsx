@@ -1,5 +1,6 @@
 import HeroSection from "@/components/HeroSection";
 import FeaturedCategories from "@/components/FeaturedCategories";
+import TrendingProducts from "@/components/TrendingProducts";
 import WhatIsEasyBuy from "@/components/WhatIsEasyBuy";
 
 export default function Home() {
@@ -7,6 +8,7 @@ export default function Home() {
     <div className="">
       <HeroSection></HeroSection>
       <FeaturedCategories></FeaturedCategories>
+      <TrendingProducts></TrendingProducts>
       <WhatIsEasyBuy></WhatIsEasyBuy>
     </div>
   );
