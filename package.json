@@ -6,12 +6,22 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "lucide": "^1.31.0",
-    "lucide-react": "^1.31.0",
-    "next": "16.3.1",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "better-auth": "^1.7.2",
+    "dotenv": "^17.4.2",
+    "lucide": "^1.34.0",
+    "lucide-react": "^1.34.0",
+    "next": "16.3.3",
+    "pg": "^8.16.3",
+    "prisma": "^7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-icons": "^5.7.0"
@@ -19,12 +29,14 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.11.14",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.3.1",
+    "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }
