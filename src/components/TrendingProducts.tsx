@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { API_URL } from "@/config/api";
 
 type Product = {
   id: number;
@@ -19,9 +20,10 @@ export default function TrendingProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/products")
+    fetch(`${API_URL}/api/products`)
       .then((res) => {
         if (!res.ok) throw new Error("Request failed");
         return res.json();
@@ -31,8 +33,8 @@ export default function TrendingProducts() {
       .finally(() => setLoading(false));
   }, []);
 
-  const visibleProducts = products.slice(0, DISPLAY_LIMIT);
-  const hasMore = products.length > DISPLAY_LIMIT;
+  const visibleProducts = showAll ? products : products.slice(0, DISPLAY_LIMIT);
+  const hasMore = products.length > DISPLAY_LIMIT && !showAll;
 
   return (
     <section className="w-full bg-white px-6 py-16 sm:px-10 lg:px-16">
@@ -84,12 +86,12 @@ export default function TrendingProducts() {
 
           {hasMore && (
             <div className="mt-12 text-center">
-              <a
-                href="#"
+              <button
+                onClick={() => setShowAll(true)}
                 className="inline-block rounded-full border border-[#2B2420] px-7 py-2.5 text-sm font-semibold text-[#2B2420] transition-colors hover:bg-[#2B2420] hover:text-white"
               >
                 View All Products
-              </a>
+              </button>
             </div>
           )}
         </>
