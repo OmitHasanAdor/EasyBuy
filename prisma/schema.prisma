@@ -74,3 +74,14 @@ model Verification {
 
   @@map("verification")
 }
+
+model Jwks {
+  id         String   @id @default(cuid())
+  publicKey  String
+  privateKey String
+  createdAt  DateTime @default(now())
+  alg        String?
+  crv        String?
+
+  @@map("jwks")
+}
