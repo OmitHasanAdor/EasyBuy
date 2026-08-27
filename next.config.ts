@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         hostname: '**',
         pathname: '**',
       },
+      {
+        protocol: "https",
+        hostname: "img.kwcdn.com",
+      },
     ],
   },
 };
