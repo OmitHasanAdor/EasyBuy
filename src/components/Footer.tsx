@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Globe } from "lucide-react";
 import {
   FaInstagram,
@@ -21,7 +22,7 @@ const shopLinks = [
 const sellLinks = ["Sell with us", "Teams", "Forums", "Affiliates & Creators"];
 
 const aboutLinks = [
-  "Company, Inc.",
+  "EasyBuy, Inc.",
   "Policies",
   "Investors",
   "Careers",
@@ -43,16 +44,16 @@ const bottomLinks = [
 function FooterColumn({ title, links }: { title: string; links: string[] }) {
   return (
     <div className="min-w-40">
-      <h3 className="mb-4 text-sm font-bold text-neutral-900">{title}</h3>
+      <h3 className="mb-4 text-sm font-bold text-[#2B2420]">{title}</h3>
       <ul className="flex flex-col gap-3">
         {links.map((link) => (
           <li key={link}>
-            <a
+            <Link
               href="#"
-              className="text-[15px] text-neutral-700 hover:underline"
+              className="text-[15px] text-[#5B5145] transition-colors hover:text-[#C05620] hover:underline"
             >
               {link}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>
@@ -62,12 +63,13 @@ function FooterColumn({ title, links }: { title: string; links: string[] }) {
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#f3efe9] px-6 pb-6 pt-14 text-neutral-900 sm:px-10 lg:px-16">
+    <footer className="w-full bg-[#F7F2E7] px-6 pb-6 pt-14 sm:px-10 lg:px-16">
       {/* Mission headline */}
-      <h2 className="mb-10 max-w-xl font-serif text-4xl font-normal leading-tight sm:text-[44px]">
+      <h2 className="mb-10 max-w-xl font-serif text-4xl font-medium leading-tight text-[#2B2420] sm:text-[44px]">
         We&apos;re on a mission to
         <br />
-        keep commerce human.
+        keep <em className="font-light italic text-[#C05620]">commerce</em>{" "}
+        human.
       </h2>
 
       {/* Link columns */}
@@ -80,57 +82,61 @@ export default function Footer() {
 
       {/* App badges */}
       <div className="mb-14 flex flex-wrap gap-3">
-        <a
+        <Link
           href="#"
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white"
+          className="flex items-center gap-2 rounded-lg bg-[#2B2420] px-4 py-2 text-[#F7F2E7] transition-opacity hover:opacity-90"
         >
           <FaApple size={22} />
           <span className="leading-tight">
             <span className="block text-[11px]">Download on the</span>
             <span className="block text-base font-semibold">App Store</span>
           </span>
-        </a>
-        <a
+        </Link>
+        <Link
           href="#"
-          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white"
+          className="flex items-center gap-2 rounded-lg bg-[#2B2420] px-4 py-2 text-[#F7F2E7] transition-opacity hover:opacity-90"
         >
           <FaGooglePlay size={20} />
           <span className="leading-tight">
             <span className="block text-[11px]">GET IT ON</span>
             <span className="block text-base font-semibold">Google Play</span>
           </span>
-        </a>
+        </Link>
       </div>
 
-      <hr className="mb-5 border-t border-[#ddd6c9]" />
+      <hr className="mb-5 border-t border-[#E7DCC4]" />
 
       {/* Bottom bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-neutral-700">
+      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#5B5145]">
         <div className="flex flex-wrap items-center gap-5">
           <span className="flex items-center gap-1.5">
-            <Globe size={16} />
+            <Globe size={16} className="text-[#8E3D14]" />
             Bangladesh
           </span>
-          <a href="#" aria-label="Instagram" className="hover:text-black">
+          <Link href="#" aria-label="Instagram" className="transition-colors hover:text-[#C05620]">
             <FaInstagram size={18} />
-          </a>
-          <a href="#" aria-label="Facebook" className="hover:text-black">
+          </Link>
+          <Link href="#" aria-label="Facebook" className="transition-colors hover:text-[#C05620]">
             <FaFacebookF size={18} />
-          </a>
-          <a href="#" aria-label="Pinterest" className="hover:text-black">
+          </Link>
+          <Link href="#" aria-label="Pinterest" className="transition-colors hover:text-[#C05620]">
             <FaPinterestP size={18} />
-          </a>
-          <a href="#" aria-label="YouTube" className="hover:text-black">
+          </Link>
+          <Link href="#" aria-label="YouTube" className="transition-colors hover:text-[#C05620]">
             <FaYoutube size={18} />
-          </a>
+          </Link>
         </div>
 
         <div className="flex flex-wrap items-center gap-5">
-          <span>© {new Date().getFullYear()} Company, Inc.</span>
+          <span>© {new Date().getFullYear()} EasyBuy, Inc.</span>
           {bottomLinks.map((link) => (
-            <a key={link} href="#" className="hover:underline">
+            <Link
+              key={link}
+              href="#"
+              className="transition-colors hover:text-[#C05620] hover:underline"
+            >
               {link}
-            </a>
+            </Link>
           ))}
         </div>
       </div>
