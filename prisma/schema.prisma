@@ -14,8 +14,12 @@ model User {
   emailVerified Boolean   @default(false)
   image         String?
   // Role & Account Status Fields
+  // Role & Account Status Fields
   role          String    @default("buyer") // e.g. "admin", "seller", "buyer"
   status        String    @default("active") // e.g. "active", "suspended", "banned"
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
   phone         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -46,6 +50,7 @@ model Account {
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accountId             String
   providerId            String
+  issuer                String?
   accessToken           String?
   refreshToken          String?
   accessTokenExpiresAt  DateTime?
