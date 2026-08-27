@@ -34,7 +34,7 @@ export default function SignUpPage() {
         <>
             <div className="mb-6 text-center">
                 <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-                <p className="mt-1 text-sm text-gray-500">Join EasyBuy — you'll start as a buyer</p>
+                <p className="mt-1 text-sm text-gray-500">Join EasyBuy — you&apos;ll start as a buyer</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
