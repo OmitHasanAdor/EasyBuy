@@ -10,7 +10,7 @@ const navLinks = [
   { label: "Women", href: "#" },
   { label: "New Arrivals", href: "#" },
   { label: "Best Sellers", href: "#" },
-  { label: "Sell on EasyBuy", href: "#" },
+  { label: "Sell on EasyBuy", href: "/profile" },
 ];
 
 export default function Navbar() {
@@ -84,11 +84,11 @@ export default function Navbar() {
           </button>
 
           <Link
-            href="#"
+            href="/profile"
             className="ml-1 hidden items-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 sm:flex"
           >
             <User className="h-4 w-4" strokeWidth={2} />
-            Sign in
+            Account
           </Link>
 
           {/* Mobile menu toggle */}
@@ -128,11 +128,11 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              href="#"
+              href="/profile"
               className="mt-2 flex items-center justify-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2.5 text-sm font-semibold text-[#F7F2E7]"
             >
               <User className="h-4 w-4" strokeWidth={2} />
-              Sign in
+              Account
             </Link>
           </nav>
         </div>
