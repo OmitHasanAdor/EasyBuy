@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { API_URL } from "@/config/api";
+import { ProductGridSkeleton } from "@/components/Loading";
 
 type Product = {
   id: number;
@@ -59,17 +60,8 @@ export default function TrendingProducts() {
         Trending Now
       </h2>
 
-      {loading && (
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i}>
-              <div className="h-48 w-full animate-pulse rounded-2xl bg-[#F2EADA] sm:h-56" />
-              <div className="mt-3 h-4 w-3/4 animate-pulse rounded bg-[#F2EADA]" />
-              <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-[#F2EADA]" />
-            </div>
-          ))}
-        </div>
-      )}
+      {/* skeleton block shared with BestSellers */}
+      {loading && <ProductGridSkeleton count={4} />}
 
       {error && (
         <p className="text-sm text-neutral-500">

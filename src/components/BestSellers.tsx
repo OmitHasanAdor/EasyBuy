@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { API_URL } from "@/config/api";
+import { ProductGridSkeleton } from "@/components/Loading";
 
 type Product = {
   id: number;
@@ -67,18 +68,8 @@ export default function BestSellers() {
           )}
         </div>
 
-        {/* Loading skeleton */}
-        {loading && (
-          <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i}>
-                <div className="aspect-square w-full animate-pulse rounded-lg bg-[#F2EADA]" />
-                <div className="mt-3 h-4 w-3/4 animate-pulse rounded bg-[#F2EADA]" />
-                <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-[#F2EADA]" />
-              </div>
-            ))}
-          </div>
-        )}
+        {/* skeleton block shared with TrendingProducts */}
+        {loading && <ProductGridSkeleton count={4} />}
 
         {/* Error state */}
         {error && (
