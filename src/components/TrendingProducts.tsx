@@ -12,9 +12,26 @@ type Product = {
   category: string;
   imageUrl: string;
   stock: number;
+  createdAt: string;
 };
 
 const DISPLAY_LIMIT = 8;
+const NEW_WINDOW_DAYS = 3;
+const LOW_STOCK_THRESHOLD = 10;
+
+// Badges 
+function getBadge(product: Product): { label: string; className: string } | null {
+  const daysSinceCreated =
+    (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+
+  if (daysSinceCreated <= NEW_WINDOW_DAYS) {
+    return { label: "New", className: "bg-[#2B2420] text-white" };
+  }
+  if (product.stock < LOW_STOCK_THRESHOLD) {
+    return { label: "Low Stock", className: "bg-[#C05620] text-white" };
+  }
+  return null;
+}
 
 export default function TrendingProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -63,25 +80,35 @@ export default function TrendingProducts() {
       {!loading && !error && (
         <>
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {visibleProducts.map((product) => (
-              <a key={product.id} href="#" className="group">
-                <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-[#F2EADA] sm:h-56">
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    fill
-                    sizes="(min-width: 1024px) 24vw, (min-width: 640px) 30vw, 45vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <h3 className="mt-3 text-sm font-medium text-[#2B2420]">
-                  {product.name}
-                </h3>
-                <p className="mt-1 text-sm font-semibold text-[#2B2420]">
-                  ৳{product.price.toLocaleString()}
-                </p>
-              </a>
-            ))}
+            {visibleProducts.map((product) => {
+              const badge = getBadge(product);
+              return (
+                <a key={product.id} href="#" className="group">
+                  <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-[#F2EADA] sm:h-56">
+                    {badge && (
+                      <span
+                        className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${badge.className}`}
+                      >
+                        {badge.label}
+                      </span>
+                    )}
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.name}
+                      fill
+                      sizes="(min-width: 1024px) 24vw, (min-width: 640px) 30vw, 45vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <h3 className="mt-3 text-sm font-medium text-[#2B2420]">
+                    {product.name}
+                  </h3>
+                  <p className="mt-1 text-sm font-semibold text-[#2B2420]">
+                    ৳{product.price.toLocaleString()}
+                  </p>
+                </a>
+              );
+            })}
           </div>
 
           {hasMore && (

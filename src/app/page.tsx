@@ -11,8 +11,8 @@ export default function Home() {
       <HeroSection></HeroSection>
       <FeaturedCategories></FeaturedCategories>
       <TrendingProducts></TrendingProducts>
-      <WhatIsEasyBuy></WhatIsEasyBuy>
       <BestSellers></BestSellers>
+      <WhatIsEasyBuy></WhatIsEasyBuy>
       <WhyChooseUs></WhyChooseUs>
     </div>
   );

@@ -19,11 +19,6 @@ export const auth = betterAuth({
     // ── Custom User Fields ────────────────────────────────────────────────────
     user: {
         additionalFields: {
-            role: {
-                type: "string",
-                defaultValue: "buyer",   // Every new user is a buyer
-                input: false,            // ⚠️ CRITICAL: prevents users setting their own role
-            },
             status: {
                 type: "string",
                 defaultValue: "active",
@@ -39,7 +34,10 @@ export const auth = betterAuth({
     // ── Plugins ───────────────────────────────────────────────────────────────
     plugins: [
         // Admin plugin — gives auth.api.setRole(), banUser(), etc.
-        admin(),
+        admin({
+            defaultRole: "buyer",
+            adminRoles: ["admin"],
+        }),
 
         // JWT plugin — issues tokens so the Express backend can verify users
         jwt({
