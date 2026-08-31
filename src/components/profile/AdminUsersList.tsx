@@ -149,7 +149,7 @@ export default function AdminUsersList({ users }: Props) {
                                         {/* User Name & Avatar */}
                                         <td className="py-3 px-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-700 to-gray-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                                <div className="w-8 h-8 rounded-full bg-linear-to-tr from-gray-700 to-gray-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
                                                     {initials}
                                                 </div>
                                                 <div>
