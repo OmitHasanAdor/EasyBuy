@@ -3,6 +3,7 @@ import FeaturedCategories from "@/components/FeaturedCategories";
 import TrendingProducts from "@/components/TrendingProducts";
 import WhatIsEasyBuy from "@/components/WhatIsEasyBuy";
 import BestSellers from "@/components/BestSellers";
+import FlashSale from "@/components/FlashSale";
 import WhyChooseUs from "@/components/WhyChooseUs";
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
       <FeaturedCategories></FeaturedCategories>
       <TrendingProducts></TrendingProducts>
       <BestSellers></BestSellers>
+      <FlashSale></FlashSale>
       <WhatIsEasyBuy></WhatIsEasyBuy>
       <WhyChooseUs></WhyChooseUs>
     </div>

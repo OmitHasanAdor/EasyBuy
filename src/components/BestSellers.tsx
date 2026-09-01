@@ -1,23 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { Heart } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
-
-type Product = {
-  id: number;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  imageUrl: string;
-  stock: number;
-  isBestSeller: boolean;
-};
+import ProductCard, { Product } from "@/components/ProductCard";
 
 const DISPLAY_LIMIT = 4;
+
+// Badges
+const bestSellerBadge = {
+  label: "Best Seller",
+  className: "bg-[#C05620] text-[#F7F2E7]",
+};
 
 export default function BestSellers() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -68,71 +62,18 @@ export default function BestSellers() {
           )}
         </div>
 
-        {/* skeleton block shared with TrendingProducts */}
         {loading && <ProductGridSkeleton count={4} />}
 
-        {/* Error state */}
         {error && (
           <p className="text-sm text-neutral-500">
             Could not load best sellers right now.
           </p>
         )}
 
-        {/* Product grid */}
         {!loading && !error && (
           <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {visibleProducts.map((product) => (
-              <div
-                key={product.id}
-                className="group relative flex flex-col overflow-hidden rounded-lg border border-[#E7DCC4] bg-white transition-shadow hover:shadow-lg"
-              >
-                {/* Badges */}
-                <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
-                  <span className="rounded-full bg-[#C05620] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#F7F2E7]">
-                    Best Seller
-                  </span>
-                  {product.stock < 10 && (
-                    <span className="rounded-full bg-[#2B2420] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-                      Low Stock
-                    </span>
-                  )}
-                </div>
-
-                {/* Wishlist */}
-                <button
-                  aria-label="Add to wishlist"
-                  className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-[#8E3D14] transition-colors hover:bg-white"
-                >
-                  <Heart className="h-4 w-4" strokeWidth={2} />
-                </button>
-
-                {/* Product image */}
-                <div className="relative aspect-square overflow-hidden bg-[#F2EADA]">
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-
-                {/* Info */}
-                <div className="flex flex-1 flex-col gap-1.5 p-4">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#8E3D14]">
-                    {product.category}
-                  </span>
-                  <h3 className="font-serif text-base font-medium leading-snug text-[#2B2420]">
-                    {product.name}
-                  </h3>
-
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="font-serif text-lg font-medium text-[#2B2420]">
-                      ৳{product.price.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <ProductCard key={product.id} product={product} badge={bestSellerBadge} />
             ))}
           </div>
         )}
