@@ -20,23 +20,18 @@ const STATUS_STYLES: Record<string, string> = {
 const STATUS_OPTIONS = ["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
 
 export default function OrdersClient({ orders }: OrdersClientProps) {
+    const [mounted, setMounted] = useState(false);
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
-    const [error, setError] = useState<string | null>(null);
 
-    // যদি orders না আসে, তাহলে error দেখান
     useEffect(() => {
-        if (!orders || orders.length === 0) {
-            // এটা error না, এটা empty state
-            return;
-        }
-    }, [orders]);
+        setMounted(true);
+    }, []);
 
-    // যদি orders undefined বা null হয়
-    if (!orders) {
+    if (!orders || orders.length === 0) {
         return (
             <div className="px-6 py-8 text-center">
-                <p className="text-red-600">No order data available</p>
+                <p className="text-red-600">No orders found</p>
             </div>
         );
     }
@@ -57,7 +52,6 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
 
     return (
         <div className="px-6 py-8 sm:px-10">
-            {/* Header */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="font-serif text-2xl font-medium text-[#2B2420]">
@@ -67,7 +61,6 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                         {orders.length} order{orders.length !== 1 ? "s" : ""} total
                     </p>
                 </div>
-
                 <div className="relative">
                     <select
                         value={statusFilter}
@@ -87,7 +80,6 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                 </div>
             </div>
 
-            {/* Orders List */}
             {filteredOrders.length === 0 ? (
                 <div className="mt-8 rounded-lg border border-dashed border-[#E7DCC4] bg-white p-12 text-center">
                     <Package className="mx-auto h-12 w-12 text-[#C05620]/40" />
@@ -105,14 +97,12 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                     {filteredOrders.map((order) => {
                         const isExpanded = expandedOrderId === order.id;
                         const firstItem = order.items?.[0];
-                        const extraCount = (order.items?.length || 0) - 1;
 
                         return (
                             <div
                                 key={order.id}
                                 className="overflow-hidden rounded-lg border border-[#E7DCC4] bg-white transition-shadow hover:shadow-sm"
                             >
-                                {/* Order Header */}
                                 <div
                                     className="flex cursor-pointer flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                                     onClick={() => toggleExpand(order.id)}
@@ -134,12 +124,17 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                                 Order #{order.id}
                                             </p>
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8E3D14]/70">
-                                                <span suppressHydrationWarning>
-                                                    {new Date(order.createdAt).toLocaleDateString(undefined, {
-                                                        year: "numeric",
-                                                        month: "short",
-                                                        day: "numeric",
-                                                    })}
+                                                <span>
+                                                    {mounted
+                                                        ? new Date(order.createdAt).toLocaleDateString(
+                                                              "en-US",
+                                                              {
+                                                                  year: "numeric",
+                                                                  month: "short",
+                                                                  day: "numeric",
+                                                              }
+                                                          )
+                                                        : ""}
                                                 </span>
                                                 <span>•</span>
                                                 <span>
@@ -152,13 +147,14 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
 
                                     <div className="flex items-center gap-3 self-end sm:self-auto">
                                         <span
-                                            className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${STATUS_STYLES[order.status] ?? "bg-gray-100 text-gray-700"
-                                                }`}
+                                            className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${
+                                                STATUS_STYLES[order.status] ?? "bg-gray-100 text-gray-700"
+                                            }`}
                                         >
                                             {order.status.toLowerCase()}
                                         </span>
                                         <span className="shrink-0 text-sm font-semibold text-[#2B2420]">
-                                            ৳{order.total.toLocaleString()}
+                                            {mounted ? `৳${order.total.toLocaleString()}` : ""}
                                         </span>
                                         <button className="ml-1 shrink-0 text-[#8E3D14]/50 hover:text-[#C05620]">
                                             {isExpanded ? (
@@ -170,8 +166,8 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                     </div>
                                 </div>
 
-                                {/* Order Details (expanded) */}
-                                {isExpanded && (
+                                {/* Order Details - সম্পূর্ণ অংশ শুধু client-side এ */}
+                                {isExpanded && mounted && (
                                     <div className="border-t border-[#F0E6D2] px-5 py-4">
                                         <h4 className="mb-3 text-sm font-medium text-[#2B2420]">
                                             Order Items
