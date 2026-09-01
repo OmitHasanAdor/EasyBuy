@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
 import ProductCard, { Product } from "@/components/ProductCard";
+import MiniCountdown from "@/components/MiniCountdown";
+
+// Constants defined for the flash sale display
+const DISPLAY_LIMIT = 4;
 
 function useEarliestActiveCountdown(saleEndTimes: number[]) {
   const [now, setNow] = useState(() => Date.now());
@@ -15,7 +20,6 @@ function useEarliestActiveCountdown(saleEndTimes: number[]) {
     return () => clearInterval(id);
   }, []);
 
-// Find the nearest sale end time that is still in the future
   const activeTimes = saleEndTimes.filter((t) => t > now);
   const nearest = activeTimes.length ? Math.min(...activeTimes) : null;
   const msLeft = nearest ? nearest - now : 0;
@@ -57,8 +61,9 @@ export default function FlashSale() {
   const saleEndTimes = products.map((p) => new Date(p.saleEndsAt!).getTime());
   const { d, h, m, s, hasActive } = useEarliestActiveCountdown(saleEndTimes);
 
- // Filter out products whose sale has already ended
   const activeProducts = products.filter((p) => new Date(p.saleEndsAt!).getTime() > Date.now());
+  const visibleProducts = activeProducts.slice(0, DISPLAY_LIMIT);
+  const hasMore = activeProducts.length > DISPLAY_LIMIT;
 
   if (!loading && !error && activeProducts.length === 0) return null;
 
@@ -99,31 +104,48 @@ export default function FlashSale() {
             </h2>
           </div>
 
-          {!loading && !error && hasActive && (
-            <div className="flex items-center gap-2 rounded-lg bg-[#F7F2E7] px-4 py-3 shadow-lg">
-              <motion.span
-                animate={{ scale: [1, 1.25, 1] }}
-                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-                className="mr-0.5 text-[#C05620]"
+          <div className="flex flex-col items-start gap-3 sm:items-end">
+            {!loading && !error && hasActive && (
+              <div className="flex items-center gap-2 rounded-lg bg-[#F7F2E7] px-4 py-3 shadow-lg">
+                <motion.span
+                  animate={{ scale: [1, 1.25, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                  className="mr-0.5 text-[#C05620]"
+                >
+                  <Zap className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
+                </motion.span>
+                <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-[#8E3D14]">
+                  Ends in
+                </span>
+                {d > 0 && (
+                  <>
+                    <TimeBox value={d} label="days" />
+                    <span className="font-serif text-lg text-[#2B2420]">:</span>
+                  </>
+                )}
+                <TimeBox value={h} label="hrs" />
+                <span className="font-serif text-lg text-[#2B2420]">:</span>
+                <TimeBox value={m} label="min" />
+                <span className="font-serif text-lg text-[#2B2420]">:</span>
+                <TimeBox value={s} label="sec" />
+              </div>
+            )}
+
+            {hasMore && (
+              <Link
+                href="/flash-sale"
+                className="group/link inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-white"
               >
-                <Zap className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
-              </motion.span>
-              <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-[#8E3D14]">
-                Ends in
-              </span>
-              {d > 0 && (
-                <>
-                  <TimeBox value={d} label="days" />
-                  <span className="font-serif text-lg text-[#2B2420]">:</span>
-                </>
-              )}
-              <TimeBox value={h} label="hrs" />
-              <span className="font-serif text-lg text-[#2B2420]">:</span>
-              <TimeBox value={m} label="min" />
-              <span className="font-serif text-lg text-[#2B2420]">:</span>
-              <TimeBox value={s} label="sec" />
-            </div>
-          )}
+                <span className="relative">
+                  View all deals
+                  <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-white transition-all duration-300 ease-out group-hover/link:w-full" />
+                </span>
+                <span className="transition-transform duration-300 ease-out group-hover/link:translate-x-1">
+                  →
+                </span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {loading && <ProductGridSkeleton count={4} />}
@@ -132,8 +154,11 @@ export default function FlashSale() {
 
         {!loading && !error && (
           <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-            {activeProducts.map((product) => (
-              <ProductCard key={product.id} product={product} variant="sale" />
+            {visibleProducts.map((product) => (
+              <div key={product.id} className="relative">
+                <ProductCard product={product} variant="sale" />
+                {product.saleEndsAt && <MiniCountdown endsAt={product.saleEndsAt} />}
+              </div>
             ))}
           </div>
         )}
