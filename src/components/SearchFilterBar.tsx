@@ -29,7 +29,7 @@ export default function SearchFilterBar({ category, minPrice, maxPrice, onChange
           onChange={(e) => onChange({ category: e.target.value, minPrice, maxPrice })}
           className="rounded-sm border border-[#E7DCC4] px-3 py-2 text-sm text-[#2B2420]"
         >
-          <option value="">All</option>
+          <option value="">All Products</option>
           {categories.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
@@ -40,6 +40,7 @@ export default function SearchFilterBar({ category, minPrice, maxPrice, onChange
         <label className="text-xs font-semibold uppercase tracking-wide text-[#8E3D14]">Min Price</label>
         <input
           type="number"
+          min="0"
           value={minPrice}
           onChange={(e) => onChange({ category, minPrice: e.target.value, maxPrice })}
           placeholder="৳0"
@@ -51,6 +52,7 @@ export default function SearchFilterBar({ category, minPrice, maxPrice, onChange
         <label className="text-xs font-semibold uppercase tracking-wide text-[#8E3D14]">Max Price</label>
         <input
           type="number"
+          min="0"
           value={maxPrice}
           onChange={(e) => onChange({ category, minPrice, maxPrice: e.target.value })}
           placeholder="৳10000"
