@@ -18,7 +18,7 @@ export default function Error({
 
   return (
     <section className="relative flex min-h-[75vh] w-full items-center justify-center overflow-hidden bg-[#FBF8F1] px-6 py-20">
-      <div className="pointer-events-none absolute h-[420px] w-[420px] rounded-full bg-[#C05620]/[0.06] blur-3xl" />
+      <div className="pointer-events-none absolute h-105 w-105 rounded-full bg-[#C05620]/6 blur-3xl" />
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}

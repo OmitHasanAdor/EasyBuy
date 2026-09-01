@@ -95,7 +95,7 @@ export default async function ProfilePage() {
                 <div className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-sm">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
                         <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#2B2420] to-[#5C4D44] text-white flex items-center justify-center font-bold text-xl shadow-xs">
+                            <div className="w-14 h-14 rounded-2xl bg-linear-to-tr from-[#2B2420] to-[#5C4D44] text-white flex items-center justify-center font-bold text-xl shadow-xs">
                                 {dbUser.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div>
