@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 import { useWishlist } from "@/lib/wishlist";
+import MiniCountdown from "@/components/MiniCountdown";
 
 export type Product = {
   id: number;
@@ -47,7 +48,7 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
   return (
     <Link
       href={`/products/${product.id}`}
-      className={`group relative flex flex-col overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-lg ${
+      className={`group relative flex h-full flex-col overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-lg ${
         variant === "sale"
           ? "border-[#C05620]/30 ring-1 ring-[#C05620]/20 hover:ring-[#C05620]/50"
           : "border-[#E7DCC4]"
@@ -94,6 +95,9 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
+        {variant === "sale" && product.saleEndsAt && (
+          <MiniCountdown endsAt={product.saleEndsAt} />
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">

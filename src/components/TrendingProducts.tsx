@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
 import ProductCard, { Product } from "@/components/ProductCard";
@@ -23,7 +24,6 @@ export default function TrendingProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/products`)
@@ -36,14 +36,30 @@ export default function TrendingProducts() {
       .finally(() => setLoading(false));
   }, []);
 
-  const visibleProducts = showAll ? products : products.slice(0, DISPLAY_LIMIT);
-  const hasMore = products.length > DISPLAY_LIMIT && !showAll;
+  const visibleProducts = products.slice(0, DISPLAY_LIMIT);
+  const hasMore = products.length > DISPLAY_LIMIT;
 
   return (
     <section className="w-full bg-white px-6 py-16 sm:px-10 lg:px-16">
-      <h2 className="mb-10 font-serif text-3xl font-normal text-[#2B2420] sm:text-4xl">
-        Trending Now
-      </h2>
+      <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <h2 className="font-serif text-3xl font-normal text-[#2B2420] sm:text-4xl">
+          Trending Now
+        </h2>
+        {hasMore && (
+          <Link
+            href="/trending"
+            className="group/link inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-[#8E3D14]"
+          >
+            <span className="relative">
+              View all products
+              <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-[#8E3D14] transition-all duration-300 ease-out group-hover/link:w-full" />
+            </span>
+            <span className="transition-transform duration-300 ease-out group-hover/link:translate-x-1">
+              →
+            </span>
+          </Link>
+        )}
+      </div>
 
       {loading && <ProductGridSkeleton count={4} />}
 
@@ -54,24 +70,11 @@ export default function TrendingProducts() {
       )}
 
       {!loading && !error && (
-        <>
-          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} badge={getBadge(product)} />
-            ))}
-          </div>
-
-          {hasMore && (
-            <div className="mt-12 text-center">
-              <button
-                onClick={() => setShowAll(true)}
-                className="inline-block rounded-full border border-[#2B2420] px-7 py-2.5 text-sm font-semibold text-[#2B2420] transition-colors hover:bg-[#2B2420] hover:text-white"
-              >
-                View All Products
-              </button>
-            </div>
-          )}
-        </>
+        <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+          {visibleProducts.map((product) => (
+            <ProductCard key={product.id} product={product} badge={getBadge(product)} />
+          ))}
+        </div>
       )}
     </section>
   );
