@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
 import ProductCard, { Product } from "@/components/ProductCard";
 
-const DISPLAY_LIMIT = 4;
+const DISPLAY_LIMIT = 8;
 
 // Badges
 const bestSellerBadge = {
@@ -17,7 +18,6 @@ export default function BestSellers() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/products/best-sellers`)
@@ -30,8 +30,8 @@ export default function BestSellers() {
       .finally(() => setLoading(false));
   }, []);
 
-  const visibleProducts = showAll ? products : products.slice(0, DISPLAY_LIMIT);
-  const hasMore = products.length > DISPLAY_LIMIT && !showAll;
+  const visibleProducts = products.slice(0, DISPLAY_LIMIT);
+  const hasMore = products.length > DISPLAY_LIMIT;
 
   return (
     <section className="w-full bg-[#FBF8F1] px-6 py-20 sm:px-10 lg:px-16">
@@ -47,8 +47,8 @@ export default function BestSellers() {
             </h2>
           </div>
           {hasMore && (
-            <button
-              onClick={() => setShowAll(true)}
+            <Link
+              href="/best-sellers"
               className="group/link inline-flex items-center gap-1.5 text-sm font-semibold tracking-wide text-[#8E3D14]"
             >
               <span className="relative">
@@ -58,7 +58,7 @@ export default function BestSellers() {
               <span className="transition-transform duration-300 ease-out group-hover/link:translate-x-1">
                 →
               </span>
-            </button>
+            </Link>
           )}
         </div>
 

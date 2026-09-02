@@ -63,7 +63,13 @@ export default function ProductDetailPage() {
         <Swiper spaceBetween={10} className="aspect-square w-full overflow-hidden rounded-lg bg-[#F2EADA]">
           {images.map((src, i) => (
             <SwiperSlide key={i} className="relative">
-              <Image src={src} alt={product.name} fill className="object-cover" />
+              <Image
+                src={src}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
             </SwiperSlide>
           ))}
         </Swiper>
