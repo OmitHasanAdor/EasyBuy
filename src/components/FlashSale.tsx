@@ -7,7 +7,6 @@ import { Zap } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
 import ProductCard, { Product } from "@/components/ProductCard";
-import MiniCountdown from "@/components/MiniCountdown";
 
 // Constants defined for the flash sale display
 const DISPLAY_LIMIT = 4;
@@ -155,10 +154,7 @@ export default function FlashSale() {
         {!loading && !error && (
           <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {visibleProducts.map((product) => (
-              <div key={product.id} className="relative">
-                <ProductCard product={product} variant="sale" />
-                {product.saleEndsAt && <MiniCountdown endsAt={product.saleEndsAt} />}
-              </div>
+              <ProductCard key={product.id} product={product} variant="sale" />
             ))}
           </div>
         )}

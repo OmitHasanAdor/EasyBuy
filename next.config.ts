@@ -8,18 +8,20 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '**',
-        pathname: '**',
-      },
-      {
-        protocol: 'http',
-        hostname: '**',
-        pathname: '**',
+        protocol: "https",
+        hostname: "img.kwcdn.com",
       },
       {
         protocol: "https",
-        hostname: "img.kwcdn.com",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
+      },
+      {
+        protocol: "https",
+        hostname: "encrypted-tbn0.gstatic.com",
       },
     ],
   },
