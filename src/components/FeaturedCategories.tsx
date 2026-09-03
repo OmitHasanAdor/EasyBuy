@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Shirt, Home, Sparkles, ShoppingBag, Tag } from "lucide-react";
 import Link from "next/link";
 import { API_URL } from "@/config/api";
@@ -15,18 +15,13 @@ const CATEGORY_STYLE: Record<string, { icon: typeof Shirt; bg: string }> = {
 const FALLBACK_STYLE = { icon: Tag, bg: "bg-[#8E7B5C]" };
 
 export default function FeaturedCategories() {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+// Reuses the shared categories cache
+  const { data: categories = [], isLoading } = useQuery<string[]>({
+    queryKey: ["categories"],
+    queryFn: () => fetch(`${API_URL}/api/categories`).then((res) => res.json()),
+  });
 
-  useEffect(() => {
-    fetch(`${API_URL}/api/categories`)
-      .then((res) => res.json())
-      .then(setCategories)
-      .catch(() => setCategories([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (!loading && categories.length === 0) return null;
+  if (!isLoading && categories.length === 0) return null;
 
   return (
     <section className="w-full bg-[#F7F2E7] px-6 py-16 sm:px-10 lg:px-16">
@@ -35,12 +30,12 @@ export default function FeaturedCategories() {
       </h2>
 
       <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
-        {loading &&
+        {isLoading &&
           [...Array(4)].map((_, i) => (
             <div key={i} className="h-40 animate-pulse rounded-2xl bg-white sm:h-48" />
           ))}
 
-        {!loading &&
+        {!isLoading &&
           categories.map((name) => {
             const { icon: Icon, bg } = CATEGORY_STYLE[name] ?? FALLBACK_STYLE;
             return (

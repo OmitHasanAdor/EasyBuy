@@ -114,8 +114,12 @@ export default function CartPage() {
                     <button
                       aria-label="Remove item"
                       onClick={() => {
-                        removeItem(item.id);
-                        toast.success(`${item.name} removed from cart`);
+                        const success = removeItem(item.id);
+                        if (success) {
+                          toast.success(`${item.name} removed from cart`);
+                        } else {
+                          toast.error("Couldn't remove item. Please try again.");
+                        }
                       }}
                       className="text-neutral-400 hover:text-[#C05620]"
                     >
