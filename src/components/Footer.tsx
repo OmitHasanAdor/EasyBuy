@@ -1,9 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import { Globe } from "lucide-react";
-import { motion } from "framer-motion";
 import {
   FaInstagram,
   FaFacebookF,
@@ -12,8 +9,6 @@ import {
   FaApple,
   FaGooglePlay,
 } from "react-icons/fa";
-
-const ease = [0.22, 1, 0.36, 1] as const;
 
 const shopLinks = [
   "Gift cards",
@@ -90,17 +85,11 @@ export default function Footer() {
               </span>
             </Link>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.6, ease }}
-              className="font-serif text-3xl font-medium leading-[1.15] text-[#2B2420] sm:text-[36px]"
-            >
+            <h2 className="font-serif text-3xl font-medium leading-[1.15] text-[#2B2420] sm:text-[36px]">
               We&apos;re on a mission to keep{" "}
               <em className="font-medium not-italic text-[#C05620]">commerce</em>{" "}
               human.
-            </motion.h2>
+            </h2>
 
             {/* App badges */}
             <div className="mt-8 flex flex-wrap gap-3">
