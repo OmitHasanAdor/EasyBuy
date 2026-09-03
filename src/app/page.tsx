@@ -12,9 +12,9 @@ export default function Home() {
     <div className="">
       <HeroSection></HeroSection>
       <FeaturedCategories></FeaturedCategories>
-      <RecentlyViewed></RecentlyViewed>
       <TrendingProducts></TrendingProducts>
       <BestSellers></BestSellers>
+      <RecentlyViewed></RecentlyViewed>
       <FlashSale></FlashSale>
       <WhatIsEasyBuy></WhatIsEasyBuy>
       <WhyChooseUs></WhyChooseUs>
