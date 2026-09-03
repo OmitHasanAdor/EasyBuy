@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* ── Custom font theme token ──────────────────────────────── */
+@theme {
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
 /* three-dot loader, used in Loading.tsx */
 .loader-dots {
   width: 24px;
