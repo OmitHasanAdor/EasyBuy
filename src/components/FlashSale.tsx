@@ -8,8 +8,25 @@ import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
 import ProductCard, { Product } from "@/components/ProductCard";
 
-// Constants defined for the flash sale display
 const DISPLAY_LIMIT = 4;
+const NEW_WINDOW_DAYS = 3;
+
+const bestSellerBadge = {
+  label: "Best Seller",
+  className: "bg-[#C05620] text-[#F7F2E7]",
+};
+
+// Function to determine the badge for a product based on its properties
+function getBadge(product: Product) {
+  if (product.isBestSeller) return bestSellerBadge;
+  if (!product.createdAt) return null;
+  const daysSinceCreated =
+    (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSinceCreated <= NEW_WINDOW_DAYS) {
+    return { label: "New", className: "bg-[#2B2420] text-white" };
+  }
+  return null;
+}
 
 function useEarliestActiveCountdown(saleEndTimes: number[]) {
   const [now, setNow] = useState(() => Date.now());
@@ -154,7 +171,7 @@ export default function FlashSale() {
         {!loading && !error && (
           <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
             {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} variant="sale" />
+              <ProductCard key={product.id} product={product} variant="sale" badge={getBadge(product)} />
             ))}
           </div>
         )}
