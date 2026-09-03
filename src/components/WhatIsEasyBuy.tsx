@@ -1,10 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import { ShieldCheck, Users } from "lucide-react";
-import { motion } from "framer-motion";
-
-const ease = [0.22, 1, 0.36, 1] as const;
+import FadeInView from "@/components/FadeInView";
 
 const points = [
   {
@@ -27,13 +23,7 @@ export default function WhatIsEasyBuy() {
       <div className="mx-auto max-w-7xl">
 
         {/* ── Header ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.55, ease }}
-          className="mb-16 text-center"
-        >
+        <FadeInView className="mb-16 text-center" margin="-80px">
           <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-[4px] text-[#C05620]">
             About us
           </span>
@@ -46,17 +36,15 @@ export default function WhatIsEasyBuy() {
           >
             Read our story
           </a>
-        </motion.div>
+        </FadeInView>
 
         {/* ── Cards ── */}
         <div className="grid gap-6 sm:grid-cols-3">
           {points.map(({ icon: Icon, title, description }, i) => (
-            <motion.div
+            <FadeInView
               key={title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.5, ease, delay: i * 0.1 }}
+              delay={i * 0.1}
+              y={24}
               className="group rounded-2xl border border-[#E7DCC4] bg-white p-7 text-left shadow-[0_2px_12px_rgba(43,36,32,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(43,36,32,0.11)]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-[#EA8A4A] to-[#BE531D]">
@@ -68,15 +56,13 @@ export default function WhatIsEasyBuy() {
               <p className="mt-3 text-[14.5px] leading-relaxed text-[#5B5145]">
                 {description}
               </p>
-            </motion.div>
+            </FadeInView>
           ))}
 
           {/* third card — logo card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5, ease, delay: 0.2 }}
+          <FadeInView
+            delay={0.2}
+            y={24}
             className="group rounded-2xl border border-[#E7DCC4] bg-white p-7 text-left shadow-[0_2px_12px_rgba(43,36,32,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(43,36,32,0.11)]"
           >
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-[#F2EADA] p-2">
@@ -95,15 +81,13 @@ export default function WhatIsEasyBuy() {
               AI-backed checks flag suspicious listings before they reach you,
               so every purchase feels safe from the start.
             </p>
-          </motion.div>
+          </FadeInView>
         </div>
 
         {/* ── CTA row ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.5, ease, delay: 0.3 }}
+        <FadeInView
+          delay={0.3}
+          margin="-40px"
           className="mt-16 flex flex-col items-center gap-4 text-center"
         >
           <p className="font-serif text-lg font-medium text-[#2B2420]">
@@ -115,7 +99,7 @@ export default function WhatIsEasyBuy() {
           >
             Go to Help Center
           </a>
-        </motion.div>
+        </FadeInView>
 
       </div>
     </section>
