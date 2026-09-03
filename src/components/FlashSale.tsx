@@ -11,6 +11,25 @@ import ProductCard, { Product } from "@/components/ProductCard";
 const DISPLAY_LIMIT = 4;
 const ease = [0.22, 1, 0.36, 1] as const;
 
+// Remote: badge helper for flash sale products
+const NEW_WINDOW_DAYS = 3;
+
+const bestSellerBadge = {
+  label: "Best Seller",
+  className: "bg-[#C05620] text-[#F7F2E7]",
+};
+
+function getBadge(product: Product) {
+  if (product.isBestSeller) return bestSellerBadge;
+  if (!product.createdAt) return null;
+  const daysSinceCreated =
+    (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSinceCreated <= NEW_WINDOW_DAYS) {
+    return { label: "New", className: "bg-[#2B2420] text-white" };
+  }
+  return null;
+}
+
 /* ─── countdown hook ──────────────────────────────────── */
 function useEarliestActiveCountdown(saleEndTimes: number[]) {
   const [now, setNow] = useState(() => Date.now());
@@ -184,7 +203,7 @@ export default function FlashSale() {
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.45, ease, delay: i * 0.07 }}
               >
-                <ProductCard product={product} variant="sale" />
+                <ProductCard product={product} variant="sale" badge={getBadge(product)} />
               </motion.div>
             ))}
           </div>

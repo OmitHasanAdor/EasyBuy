@@ -12,7 +12,13 @@ const DISPLAY_LIMIT = 8;
 const NEW_WINDOW_DAYS = 3;
 const ease = [0.22, 1, 0.36, 1] as const;
 
+const bestSellerBadge = {
+  label: "Best Seller",
+  className: "bg-[#C05620] text-[#F7F2E7]",
+};
+
 function getBadge(product: Product) {
+  if (product.isBestSeller) return bestSellerBadge;
   if (!product.createdAt) return null;
   const daysSinceCreated =
     (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);

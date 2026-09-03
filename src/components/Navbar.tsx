@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { useCart } from "@/lib/cart-context";
@@ -11,19 +12,16 @@ import { useWishlist } from "@/lib/wishlist";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const router = useRouter();
   const { totalCount } = useCart();
   const { count: wishlistCount } = useWishlist();
 
-  // Load categories from the database
-  useEffect(() => {
-    fetch(`${API_URL}/api/categories`)
-      .then((res) => res.json())
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, []);
+// Shared cache for category queries
+  const { data: categories = [] } = useQuery<string[]>({
+    queryKey: ["categories"],
+    queryFn: () => fetch(`${API_URL}/api/categories`).then((res) => res.json()),
+  });
 
   const navLinks = [
     ...categories.map((c) => ({ label: c, href: `/products?category=${encodeURIComponent(c)}` })),

@@ -9,8 +9,14 @@ import ProductCard, { Product } from "@/components/ProductCard";
 
 const NEW_WINDOW_DAYS = 3;
 
-// "New" badge if recently added, else no badge
+const bestSellerBadge = {
+  label: "Best Seller",
+  className: "bg-[#C05620] text-[#F7F2E7]",
+};
+
+// Function to determine the badge for a product based on its properties
 function getBadge(product: Product) {
+  if (product.isBestSeller) return bestSellerBadge;
   if (!product.createdAt) return null;
   const daysSinceCreated =
     (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);

@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import { CartProvider } from "@/lib/cart-context";
+import Providers from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,15 +36,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <CartProvider>
+        <Providers>
           <Navbar></Navbar>
           <main>
-          {children}
+            {children}
           </main>
           <Footer></Footer>
           <Toaster position="bottom-center" richColors />
-        </CartProvider>
-        </body>
+        </Providers>
+      </body>
     </html>
   );
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, Star, ImageOff } from "lucide-react";
 import { toast } from "sonner";
 import { useWishlist } from "@/lib/wishlist";
 import MiniCountdown from "@/components/MiniCountdown";
@@ -13,12 +13,14 @@ export type Product = {
   price: number;
   description: string;
   category: string;
-  imageUrl: string;
+  images: string[];
   stock: number;
   isBestSeller?: boolean;
   createdAt?: string;
   discountPercent?: number | null;
   saleEndsAt?: string | null;
+  hasVariants?: boolean;
+  reviews?: { rating: number }[];
 };
 
 type ProductCardProps = {
@@ -38,11 +40,25 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
     ? Math.round(product.price * (1 - product.discountPercent! / 100))
     : product.price;
 
+  // Get the cover image and average rating
+  const coverImage = product.images?.[0] || null;
+
+  const reviewCount = product.reviews?.length ?? 0;
+  const avgRating =
+    reviewCount > 0
+      ? product.reviews!.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+      : null;
+
   const handleWishlist = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    toggle(product.id);
-    toast.success(wishlisted ? "Removed from wishlist" : "Added to wishlist");
+    const wasWishlisted = wishlisted;
+    const success = toggle(product.id);
+    if (success) {
+      toast.success(wasWishlisted ? "Removed from wishlist" : "Added to wishlist");
+    } else {
+      toast.error("Couldn't update your wishlist. Please try again.");
+    }
   };
 
   return (
@@ -88,13 +104,19 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
       </button>
 
       <div className="relative aspect-square overflow-hidden bg-[#F2EADA]">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          fill
-          sizes="(max-width: 768px) 50vw, 25vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        {coverImage ? (
+          <Image
+            src={coverImage}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ImageOff className="h-8 w-8 text-[#C9BB9C]" strokeWidth={1.5} />
+          </div>
+        )}
         {variant === "sale" && product.saleEndsAt && (
           <MiniCountdown endsAt={product.saleEndsAt} />
         )}
@@ -107,6 +129,14 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
         <h3 className="font-serif text-base font-medium leading-snug text-[#2B2420]">
           {product.name}
         </h3>
+
+        {avgRating !== null && (
+          <div className="flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 fill-[#C05620] text-[#C05620]" strokeWidth={0} />
+            <span className="text-xs font-semibold text-[#2B2420]">{avgRating.toFixed(1)}</span>
+            <span className="text-xs text-neutral-400">({reviewCount})</span>
+          </div>
+        )}
 
         <div className="mt-2 flex items-center gap-2">
           <span className={`font-serif text-lg font-medium ${variant === "sale" ? "text-[#C05620]" : "text-[#2B2420]"}`}>

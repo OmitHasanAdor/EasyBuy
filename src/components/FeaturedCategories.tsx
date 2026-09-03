@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Shirt, Home, Sparkles, ShoppingBag, Tag, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -45,18 +45,13 @@ const FALLBACK_STYLE: CategoryStyle = {
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function FeaturedCategories() {
-  const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Reuses the shared categories cache
+  const { data: categories = [], isLoading } = useQuery<string[]>({
+    queryKey: ["categories"],
+    queryFn: () => fetch(`${API_URL}/api/categories`).then((res) => res.json()),
+  });
 
-  useEffect(() => {
-    fetch(`${API_URL}/api/categories`)
-      .then((res) => res.json())
-      .then(setCategories)
-      .catch(() => setCategories([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (!loading && categories.length === 0) return null;
+  if (!isLoading && categories.length === 0) return null;
 
   return (
     <section className="w-full bg-white px-6 py-20 sm:px-10 lg:px-16">
@@ -82,7 +77,7 @@ export default function FeaturedCategories() {
         <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
 
           {/* skeleton */}
-          {loading &&
+          {isLoading &&
             [...Array(4)].map((_, i) => (
               <div
                 key={i}
@@ -91,7 +86,7 @@ export default function FeaturedCategories() {
             ))}
 
           {/* category cards */}
-          {!loading &&
+          {!isLoading &&
             categories.map((name, i) => {
               const { icon: Icon, gradient, accent } =
                 CATEGORY_STYLE[name] ?? FALLBACK_STYLE;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { API_URL } from "@/config/api";
 
 type SearchFilterBarProps = {
@@ -11,14 +11,11 @@ type SearchFilterBarProps = {
 };
 
 export default function SearchFilterBar({ category, minPrice, maxPrice, onChange }: SearchFilterBarProps) {
-  const [categories, setCategories] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch(`${API_URL}/api/categories`)
-      .then((res) => res.json())
-      .then(setCategories)
-      .catch(() => setCategories([]));
-  }, []);
+  // Same "categories" cache key as Navbar/FeaturedCategories.
+  const { data: categories = [] } = useQuery<string[]>({
+    queryKey: ["categories"],
+    queryFn: () => fetch(`${API_URL}/api/categories`).then((res) => res.json()),
+  });
 
   return (
     <div className="mb-8 flex flex-wrap items-end gap-4 rounded-lg border border-[#E7DCC4] bg-white p-4">
