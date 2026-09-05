@@ -51,7 +51,7 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       links: [
         { label: "Overview", href: "/dashboard/buyer", icon: LayoutDashboard },
         { label: "My Orders", href: "/dashboard/buyer/orders", icon: Package },
-        { label: "Track Order", href: "/dashboard/buyer/track", icon: Truck },
+        { label: "Cart", href: "/dashboard/buyer/cart", icon: Truck },
         { label: "Wishlist", href: "/dashboard/buyer/wishlist", icon: Heart },
         { label: "Browse Products", href: "/products", icon: LayoutGrid },
       ],
