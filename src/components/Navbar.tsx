@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,24 +13,84 @@ import { useWishlist } from "@/lib/wishlist";
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   const router = useRouter();
+
   const { totalCount } = useCart();
   const { count: wishlistCount } = useWishlist();
 
-// Shared cache for category queries
+  // Get current user's role
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const sessionResponse = await fetch("/api/auth/get-session");
+
+        if (!sessionResponse.ok) {
+          setUserRole(null);
+          return;
+        }
+
+        const session = await sessionResponse.json();
+
+        if (!session?.user?.email) {
+          setUserRole(null);
+          return;
+        }
+
+        const response = await fetch(
+          `${API_URL}/user-role?email=${encodeURIComponent(
+            session.user.email
+          )}`
+        );
+
+        if (!response.ok) {
+          setUserRole(null);
+          return;
+        }
+
+        const data = await response.json();
+        setUserRole(data.role);
+      } catch (error) {
+        console.error("Failed to fetch user role:", error);
+        setUserRole(null);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
+
+  // Shared cache for category queries
   const { data: categories = [] } = useQuery<string[]>({
     queryKey: ["categories"],
-    queryFn: () => fetch(`${API_URL}/api/categories`).then((res) => res.json()),
+    queryFn: () =>
+      fetch(`${API_URL}/api/categories`).then((res) => res.json()),
   });
 
   const navLinks = [
-    ...categories.map((c) => ({ label: c, href: `/products?category=${encodeURIComponent(c)}` })),
-    { label: "Sell on EasyBuy", href: "/profile" },
+    ...categories.map((category) => ({
+      label: category,
+      href: `/products?category=${encodeURIComponent(category)}`,
+    })),
+    ...(userRole === "buyer"
+      ? [{ label: "Sell on EasyBuy", href: "/dashboard/buyer/profile" }]
+      : []),
   ];
+
+  const profileHref =
+    userRole === "buyer"
+      ? "/dashboard/buyer/profile"
+      : userRole === "seller"
+        ? "/dashboard/seller/profile"
+        : userRole === "admin"
+          ? "/dashboard/admin/profile"
+          : "/login";
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!search.trim()) return;
+
     router.push(`/products?search=${encodeURIComponent(search.trim())}`);
     setMobileOpen(false);
   };
@@ -48,6 +108,7 @@ export default function Navbar() {
             className="h-9 w-9 object-contain"
             priority
           />
+
           <span className="font-serif text-xl font-medium text-[#2B2420]">
             EasyBuy
           </span>
@@ -67,8 +128,12 @@ export default function Navbar() {
         </nav>
 
         {/* Search bar - desktop */}
-        <form onSubmit={submitSearch} className="relative hidden flex-1 max-w-sm items-center md:flex">
+        <form
+          onSubmit={submitSearch}
+          className="relative hidden max-w-sm flex-1 items-center md:flex"
+        >
           <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-[#8E3D14]/70" />
+
           <input
             type="text"
             value={search}
@@ -80,6 +145,7 @@ export default function Navbar() {
 
         {/* Icons */}
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile search */}
           <button
             aria-label="Search"
             onClick={() => setMobileOpen(true)}
@@ -88,43 +154,55 @@ export default function Navbar() {
             <Search className="h-5 w-5" strokeWidth={1.8} />
           </button>
 
-          <Link
-            href="/wishlist"
-            aria-label={wishlistCount > 0 ? `Wishlist (${wishlistCount})` : "Wishlist"}
-            className="relative hidden h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] sm:flex"
-          >
-            <Heart
-              className="h-5 w-5"
-              strokeWidth={1.8}
-              fill={wishlistCount > 0 ? "#8E3D14" : "none"}
-            />
-            {wishlistCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C05620] text-[10px] font-bold text-[#F7F2E7]">
-                {wishlistCount > 99 ? "99+" : wishlistCount}
-              </span>
-            )}
-          </Link>
+          {/* Wishlist - buyer only */}
+          {userRole === "buyer" && (
+            <Link
+              href="/dashboard/buyer/wishlist"
+              aria-label={
+                wishlistCount > 0
+                  ? `Wishlist (${wishlistCount})`
+                  : "Wishlist"
+              }
+              className="relative hidden h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] sm:flex"
+            >
+              <Heart
+                className="h-5 w-5"
+                strokeWidth={1.8}
+                fill={wishlistCount > 0 ? "#8E3D14" : "none"}
+              />
 
-          {/* was a plain button with no destination — now consistent with the wishlist link above */}
-          <Link
-            href="/cart"
-            aria-label={totalCount > 0 ? `Cart (${totalCount})` : "Cart"}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2]"
-          >
-            <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
-            {totalCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C05620] text-[10px] font-bold text-[#F7F2E7]">
-                {totalCount > 99 ? "99+" : totalCount}
-              </span>
-            )}
-          </Link>
+              {wishlistCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C05620] text-[10px] font-bold text-[#F7F2E7]">
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
+                </span>
+              )}
+            </Link>
+          )}
 
+          {/* Cart - buyer only */}
+          {userRole === "buyer" && (
+            <Link
+              href="/dashboard/buyer/cart"
+              aria-label={totalCount > 0 ? `Cart (${totalCount})` : "Cart"}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2]"
+            >
+              <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
+
+              {totalCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C05620] text-[10px] font-bold text-[#F7F2E7]">
+                  {totalCount > 99 ? "99+" : totalCount}
+                </span>
+              )}
+            </Link>
+          )}
+
+          {/* Profile */}
           <Link
-            href="/profile"
+            href={profileHref}
             className="ml-1 hidden items-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 sm:flex"
           >
             <User className="h-4 w-4" strokeWidth={2} />
-            Account
+            Profile
           </Link>
 
           {/* Mobile menu toggle */}
@@ -145,8 +223,13 @@ export default function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="border-t border-[#E7DCC4] bg-[#F7F2E7] px-6 py-4 lg:hidden">
-          <form onSubmit={submitSearch} className="relative mb-4 flex items-center md:hidden">
+          {/* Mobile search */}
+          <form
+            onSubmit={submitSearch}
+            className="relative mb-4 flex items-center md:hidden"
+          >
             <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-[#8E3D14]/70" />
+
             <input
               type="text"
               value={search}
@@ -157,61 +240,58 @@ export default function Navbar() {
           </form>
 
           <nav className="flex flex-col gap-1">
-            <Link
-              href="/wishlist"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-between rounded-md px-2 py-2.5 text-sm font-medium text-[#3A342C] transition-colors hover:bg-[#F0E6D2] hover:text-[#C05620]"
-            >
-              <span className="flex items-center gap-2">
-                <Heart
-                  className="h-4 w-4"
-                  strokeWidth={1.8}
-                  fill={wishlistCount > 0 ? "#8E3D14" : "none"}
-                />
-                Wishlist
-              </span>
-
-              {wishlistCount > 0 && (
-                <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
-                  {wishlistCount > 99 ? "99+" : wishlistCount}
-                </span>
-              )}
-            </Link>
-
-            <Link
-              href="/cart"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-between rounded-md px-2 py-2.5 text-sm font-medium text-[#3A342C] transition-colors hover:bg-[#F0E6D2] hover:text-[#C05620]"
-            >
-              <span className="flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" strokeWidth={1.8} />
-                Cart
-              </span>
-
-              {totalCount > 0 && (
-                <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
-                  {totalCount > 99 ? "99+" : totalCount}
-                </span>
-              )}
-            </Link>
-
-            {navLinks.map((link) => (
+            {/* Wishlist - buyer only */}
+            {userRole === "buyer" && (
               <Link
-                key={link.label}
-                href={link.href}
+                href="/dashboard/buyer/wishlist"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md px-2 py-2.5 text-sm font-medium text-[#3A342C] transition-colors hover:bg-[#F0E6D2] hover:text-[#C05620]"
+                className="flex items-center justify-between rounded-md px-2 py-2.5 text-sm font-medium text-[#3A342C] transition-colors hover:bg-[#F0E6D2] hover:text-[#C05620]"
               >
-                {link.label}
-              </Link>
-            ))}
+                <span className="flex items-center gap-2">
+                  <Heart
+                    className="h-4 w-4"
+                    strokeWidth={1.8}
+                    fill={wishlistCount > 0 ? "#8E3D14" : "none"}
+                  />
+                  Wishlist
+                </span>
 
+                {wishlistCount > 0 && (
+                  <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {/* Cart - buyer only */}
+            {userRole === "buyer" && (
+              <Link
+                href="/dashboard/buyer/cart"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-between rounded-md px-2 py-2.5 text-sm font-medium text-[#3A342C] transition-colors hover:bg-[#F0E6D2] hover:text-[#C05620]"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" strokeWidth={1.8} />
+                  Cart
+                </span>
+
+                {totalCount > 0 && (
+                  <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
+                    {totalCount > 99 ? "99+" : totalCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {/* Profile */}
             <Link
-              href="/profile"
+              href={profileHref}
+              onClick={() => setMobileOpen(false)}
               className="mt-2 flex items-center justify-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2.5 text-sm font-semibold text-[#F7F2E7]"
             >
               <User className="h-4 w-4" strokeWidth={2} />
-              Account
+              Profile
             </Link>
           </nav>
         </div>
