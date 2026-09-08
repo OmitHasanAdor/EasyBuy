@@ -304,7 +304,7 @@ export default function ProductDetailPage() {
                 : "Out of stock"}
             </p>
 
-            {/* Quantity */}
+            {/* Quantity of items */}
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold uppercase tracking-wide text-[#8E3D14]">Qty</span>
               <div className="flex items-center rounded-sm border border-[#E7DCC4]">
