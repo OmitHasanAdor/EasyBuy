@@ -1,1 +1,1 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://easybuy-server-q1y8.onrender.com";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://easybuy-server-kszk.onrender.com";
