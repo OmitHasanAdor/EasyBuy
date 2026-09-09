@@ -57,9 +57,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   // Guest logged-out wishlist
-  const [guestIds, setGuestIds] = useState<number[]>([]);
+  const [guestIds, setGuestIds] = useState<number[]>(() => readLocalWishlist());
+
   useEffect(() => {
-    setGuestIds(readLocalWishlist());
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) setGuestIds(readLocalWishlist());
     };
@@ -67,14 +67,23 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-// Logged-in wishlist
+  // Logged-in wishlist
   const { data: serverWishlist = [] } = useQuery<{ productId: number }[]>({
     queryKey: ["wishlist", userId],
-    queryFn: () => authFetch(`${API_URL}/api/wishlist`).then((res) => res.json()),
+    queryFn: async () => {
+      const res = await authFetch(`${API_URL}/api/wishlist`);
+      const data = await res.json();
+
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data?.wishlist)) return data.wishlist;
+
+      return [];
+    },
     enabled: !!userId,
   });
-  const serverIds = serverWishlist.map((w) => w.productId);
-
+  const rawServerList = Array.isArray(serverWishlist) ? serverWishlist : [];
+  const serverIds = rawServerList.map((w) => w.productId);
   // Merge guest wishlist after login
   const mergedRef = useRef(false);
   useEffect(() => {
@@ -106,18 +115,24 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       if (userId) {
         const alreadyIn = serverIds.includes(productId);
         // Optimistic update
-        queryClient.setQueryData<{ productId: number }[]>(["wishlist", userId], (old = []) =>
-          alreadyIn ? old.filter((w) => w.productId !== productId) : [...old, { productId }]
+        queryClient.setQueryData<{ productId: number }[]>(
+          ["wishlist", userId],
+          (old) => {
+            const list = Array.isArray(old) ? old : [];
+            return alreadyIn
+              ? list.filter((w) => w.productId !== productId)
+              : [...list, { productId }];
+          }
         );
         const request = alreadyIn
           ? authFetch(`${API_URL}/api/wishlist/${productId}`, { method: "DELETE" })
           : authFetch(`${API_URL}/api/wishlist`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ productId }),
-            });
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId }),
+          });
         request
-          .catch(() => {})
+          .catch(() => { })
           .finally(() => queryClient.invalidateQueries({ queryKey: ["wishlist", userId] }));
         return true;
       }

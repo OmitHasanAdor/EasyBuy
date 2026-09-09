@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { authFetch } from "@/lib/auth-fetch";
@@ -66,9 +75,9 @@ function serverRowToCartItem(row: ServerCartRow): CartItem {
     cartItemId: row.id,
     id: row.productId,
     variantId: row.variantId,
-    name: row.product.name,
-    price: row.product.price,
-    imageUrl: row.product.images?.[0] ?? "",
+    name: row.product?.name ?? "",
+    price: row.product?.price ?? 0,
+    imageUrl: row.product?.images?.[0] ?? "",
     size: row.variant?.size ?? null,
     color: row.variant?.color ?? null,
     qty: row.quantity,
@@ -81,20 +90,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   // Guest cart
-  const [guestItems, setGuestItems] = useState<CartItem[]>([]);
+ const [guestItems, setGuestItems] = useState<CartItem[]>(() => readLocalCart());
   useEffect(() => {
     setGuestItems(readLocalCart());
   }, []);
 
-  // Logged-in cart 
+  // Logged-in cart (Safe API Fetching)
   const { data: serverRows = [] } = useQuery<ServerCartRow[]>({
     queryKey: ["cart", userId],
-    queryFn: () => authFetch(`${API_URL}/api/cart`).then((res) => res.json()),
+    queryFn: async () => {
+      const res = await authFetch(`${API_URL}/api/cart`);
+      const data = await res.json();
+
+      // Check all common response wrapper formats
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.data)) return data.data;
+      if (Array.isArray(data?.items)) return data.items;
+      if (Array.isArray(data?.cart)) return data.cart;
+
+      return [];
+    },
     enabled: !!userId,
   });
-  const serverItems = serverRows.map(serverRowToCartItem);
 
-// Merge guest cart after login
+  // Safety Fallback check
+ const safeServerRows = useMemo(
+  () => (Array.isArray(serverRows) ? serverRows : []),
+  [serverRows]
+);
+  const serverItems = safeServerRows.map(serverRowToCartItem);
+
+  // Merge guest cart after login
   const mergedRef = useRef(false);
   useEffect(() => {
     if (!userId || mergedRef.current) return;
@@ -154,7 +180,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeItem = useCallback(
     (productId: number, variantId: number | null = null): boolean => {
       if (userId) {
-        const row = serverRows.find((r) => r.productId === productId && r.variantId === variantId);
+        const row = safeServerRows.find((r) => r.productId === productId && r.variantId === variantId);
         if (!row) return false;
         authFetch(`${API_URL}/api/cart/${row.id}`, { method: "DELETE" })
           .catch(() => {})
@@ -166,15 +192,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setGuestItems(next);
       return true;
     },
-    [userId, guestItems, serverRows, queryClient]
+    [userId, guestItems, safeServerRows, queryClient]
   );
 
-  const updateQty = useCallback(
-    (productId: number, qty: number, variantId: number | null = null): boolean => {
+const updateQty = useCallback(
+  (productId: number, qty: number, variantId: number | null = null): boolean => {
       if (qty <= 0) return removeItem(productId, variantId);
 
       if (userId) {
-        const row = serverRows.find((r) => r.productId === productId && r.variantId === variantId);
+        const row = safeServerRows.find((r) => r.productId === productId && r.variantId === variantId);
         if (!row) return false;
         authFetch(`${API_URL}/api/cart/${row.id}`, {
           method: "PATCH",
@@ -193,7 +219,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setGuestItems(next);
       return true;
     },
-    [userId, guestItems, serverRows, removeItem]
+   [userId, guestItems, safeServerRows, removeItem, queryClient]
   );
 
   const totalCount = items.reduce((sum, i) => sum + i.qty, 0);
