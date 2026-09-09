@@ -57,7 +57,7 @@ export default function LoginPage() {
           Sign in to EasyBuy
         </h1>
         <p className="mt-2 text-[13.5px] leading-relaxed text-[#5B5145]">
-          Good to see you again — let&apos;s pick up where you left off
+          Sign in to your EasyBuy account
         </p>
       </motion.div>
 

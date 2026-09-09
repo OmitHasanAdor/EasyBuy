@@ -115,7 +115,7 @@ export default function AuthLayout({
           transition={{ duration: 0.7, ease, delay: 0.85 }}
           className="relative z-10 text-[12px] font-medium text-[#F7F2E7]/50"
         >
-          Tailored &amp; everyday essentials — since 2024.
+          Tailored &amp; everyday essentials, since 2024.
         </motion.p>
       </motion.aside>
 

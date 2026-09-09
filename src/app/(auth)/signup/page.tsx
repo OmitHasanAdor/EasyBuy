@@ -61,7 +61,7 @@ export default function SignUpPage() {
           Create your account
         </h1>
         <p className="mt-2 text-[13.5px] leading-relaxed text-[#5B5145]">
-          Join EasyBuy — you&apos;ll start as a buyer
+          You&apos;ll start as a buyer. Sellers apply separately.
         </p>
       </motion.div>
 
