@@ -101,7 +101,7 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       links: [
         { label: "Store Settings", href: "/dashboard/seller/settings", icon: Settings },
         { label: "Notifications", href: "/dashboard/seller/notifications", icon: Bell },
-        { label: "Help Center", href: "/dashboard/seller/help", icon: HelpCircle },
+        { label: "Help Center", href: "/help", icon: HelpCircle },
       ],
     },
   ],
