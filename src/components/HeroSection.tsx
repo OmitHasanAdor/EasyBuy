@@ -19,7 +19,7 @@ export default function HeroSection() {
         initial={{ opacity: 0, x: -40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.75, ease }}
-        className="relative order-1 flex flex-col items-center justify-center gap-2 overflow-hidden bg-linear-to-br from-[#C05620] to-[#7A3210] py-14 md:order-none md:py-0"
+        className="relative order-1 flex flex-col items-center justify-center gap-2 overflow-hidden bg-linear-to-br from-[#C05620] to-[#7A3210] py-14 md:order-0 md:py-0"
       >
         {/* subtle grain overlay */}
         <div
@@ -46,7 +46,7 @@ export default function HeroSection() {
           viewBox="0 0 100 100"
           fill="none"
           strokeWidth={1.4}
-          className="pointer-events-none absolute -bottom-6 -right-8 w-56 stroke-[#F7F2E7]/[0.08] md:w-88"
+          className="pointer-events-none absolute -bottom-6 -right-8 w-56 stroke-[#F7F2E7]/8 md:w-88"
         >
           <path d="M30,12 L44,12 L50,24 L56,12 L70,12 L78,92 L58,92 L58,42 L50,58 L42,42 L42,92 L22,92 Z" />
         </svg>
@@ -64,7 +64,7 @@ export default function HeroSection() {
 
       {/* ── CENTER CONTENT CARD ──────────────────────────────────── */}
       {/* On mobile: normal flow block. On desktop: absolute centered overlay */}
-      <div className="relative z-20 order-2 flex w-full flex-col items-center bg-[#F7F2E7] px-8 py-12 text-center md:absolute md:left-1/2 md:top-1/2 md:order-none md:w-auto md:-translate-x-1/2 md:-translate-y-1/2 md:bg-transparent md:px-0 md:py-0">
+      <div className="relative z-20 order-2 flex w-full flex-col items-center bg-[#F7F2E7] px-8 py-12 text-center md:absolute md:left-1/2 md:top-1/2 md:order-0 md:w-auto md:-translate-x-1/2 md:-translate-y-1/2 md:bg-transparent md:px-0 md:py-0">
 
         {/* unified card on desktop */}
         <div className="flex flex-col items-center md:rounded-3xl md:bg-[#F7F2E7]/95 md:px-12 md:py-10 md:shadow-[0_8px_60px_rgba(43,36,32,0.14)] md:backdrop-blur-sm">
@@ -101,7 +101,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease, delay: 0.3 }}
-            className="font-serif text-[42px] font-medium leading-[1.0] tracking-tight text-[#2B2420] md:text-[60px] md:leading-[0.95]"
+            className="font-serif text-[42px] font-medium leading-none tracking-tight text-[#2B2420] md:text-[60px] md:leading-[0.95]"
           >
             Style, sorted
             <br />
@@ -116,7 +116,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease, delay: 0.4 }}
-            className="mt-4 max-w-[300px] text-[14.5px] leading-relaxed text-[#5B5145]"
+            className="mt-4 max-w-75 text-[14.5px] leading-relaxed text-[#5B5145]"
           >
             Real sellers, real styles. Find something you&apos;ll actually
             wear, without the fuss.
@@ -153,7 +153,7 @@ export default function HeroSection() {
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.75, ease }}
-        className="relative order-3 flex flex-col items-center justify-center gap-2 overflow-hidden bg-[#F2EADA] py-14 md:order-none md:py-0"
+        className="relative order-3 flex flex-col items-center justify-center gap-2 overflow-hidden bg-[#F2EADA] py-14 md:order-0 md:py-0"
       >
         {/* Top label */}
         <motion.span

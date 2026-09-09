@@ -12,7 +12,6 @@ import {
   ClipboardList,
   BarChart3,
   Wallet,
-  Percent,
   Star,
   Settings,
   MessageSquareText,
@@ -29,6 +28,7 @@ import {
   ShieldCheck,
   UserCog,
   type LucideIcon,
+  User,
 } from "lucide-react";
 
 export type Role = "buyer" | "seller" | "admin";
@@ -84,6 +84,7 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
         { label: "Add New Product", href: "/dashboard/seller/products/new", icon: PackagePlus },
         { label: "Inventory", href: "/dashboard/seller/inventory", icon: Boxes },
         { label: "Categories", href: "/dashboard/seller/categories", icon: Tags },
+        { label: "Profile", href: "/dashboard/seller/profile", icon: User },
       ],
     },
     {
@@ -92,7 +93,6 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
         { label: "Orders & Invoices", href: "/dashboard/seller/orders", icon: ClipboardList },
         { label: "Sales Analytics", href: "/dashboard/seller/analytics", icon: BarChart3 },
         { label: "Earnings & Payouts", href: "/dashboard/seller/earnings", icon: Wallet },
-        { label: "Promotions", href: "/dashboard/seller/promotions", icon: Percent },
         { label: "Customer Reviews", href: "/dashboard/seller/reviews", icon: Star },
       ],
     },
@@ -100,7 +100,6 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       title: "Account",
       links: [
         { label: "Store Settings", href: "/dashboard/seller/settings", icon: Settings },
-        { label: "Messages", href: "/dashboard/seller/messages", icon: MessageSquareText },
         { label: "Notifications", href: "/dashboard/seller/notifications", icon: Bell },
         { label: "Help Center", href: "/help", icon: HelpCircle },
       ],

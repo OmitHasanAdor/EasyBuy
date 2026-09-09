@@ -4,6 +4,16 @@ import { useState } from "react";
 import { submitSellerRequest } from "@/actions/seller-requests";
 import { Store, Clock, AlertCircle, CheckCircle2, RefreshCw, Send } from "lucide-react";
 
+function formatDate(date: Date | string) {
+  const value = new Date(date)
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(value)
+}
 interface SellerRequestData {
     id: string;
     storeName: string;
@@ -36,7 +46,7 @@ export default function BecomeSellerSection({
     // If user is already a seller
     if (userRole === "seller") {
         return (
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 shadow-sm">
+            <div className="bg-linear-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-start gap-4">
                     <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600">
                         <Store className="w-6 h-6" />
@@ -80,11 +90,7 @@ export default function BecomeSellerSection({
                             {existingRequest.phone && <p><strong>Contact Phone:</strong> {existingRequest.phone}</p>}
                             {existingRequest.description && <p><strong>Description:</strong> {existingRequest.description}</p>}
                             <p className="text-gray-400 pt-1">
-                                Submitted on {new Date(existingRequest.createdAt).toLocaleDateString(undefined, {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                })}
+                             Submitted on {formatDate(existingRequest.createdAt)}
                             </p>
                         </div>
                     </div>
