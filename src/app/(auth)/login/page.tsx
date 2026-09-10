@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,16 +26,16 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const err = params.get("error");
-    if (err) {
-      setError(err === "access_denied" ? "Google sign-in was cancelled." : err);
+  const [error, setError] = useState(() => {
+    if (typeof window !== "undefined") {
+      const err = new URLSearchParams(window.location.search).get("error");
+      if (err) {
+        return err === "access_denied" ? "Google sign-in was cancelled." : err;
+      }
     }
-  }, []);
+    return "";
+  });
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
