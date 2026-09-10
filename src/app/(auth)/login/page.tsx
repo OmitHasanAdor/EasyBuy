@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -178,9 +179,18 @@ export default function LoginPage() {
       <motion.div variants={item} className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-[#E7DCC4]" />
         <span className="text-[11px] font-medium uppercase tracking-[2px] text-[#5B5145]/50">
-          or
+          or continue with
         </span>
         <div className="h-px flex-1 bg-[#E7DCC4]" />
+      </motion.div>
+
+      {/* ── Social Login ── */}
+      <motion.div variants={item} className="mb-6">
+        <GoogleSignInButton
+          text="Sign in with Google"
+          callbackURL="/profile"
+          onError={(msg) => setError(msg)}
+        />
       </motion.div>
 
       {/* ── Sign-up link ── */}
