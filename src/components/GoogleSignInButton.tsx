@@ -54,7 +54,8 @@ export default function GoogleSignInButton({
             const res = await signIn.social({
                 provider: "google",
                 callbackURL,
-            });
+                prompt: "select_account",
+            } as Parameters<typeof signIn.social>[0]);
 
             if (res?.error) {
                 onError?.(res.error.message || "Failed to sign in with Google.");
