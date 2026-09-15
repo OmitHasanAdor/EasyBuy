@@ -34,8 +34,8 @@
 
 ## 🚧 In Progress
 
-* **Authentication:** Buyer/seller/admin sign-up and login, powered by Better-Auth.
-* **Role-Based Dashboards:** Dedicated dashboards for buyers (orders & wishlist), sellers (product & sales management), and admins (user & listing moderation).
+* **Payment Gateway:** Implementing Bangladeshi payment Gateway SSLCommerz.
+* **AI Chatbot:** Ai Chatbot will be help users to find their suitable product.
 * **Live Database Integration:** Connecting the Prisma schema to a production PostgreSQL database.
 
 ---
