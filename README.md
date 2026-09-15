@@ -47,4 +47,4 @@
 | 🌐 Live Site | [easy-buy-ruddy.vercel.app](https://easy-buy-ruddy.vercel.app/) |
 | 💻 Client Repository | [github.com/OmitHasanAdor/EasyBuy](https://github.com/OmitHasanAdor/EasyBuy) |
 | 🖥️ Server Repository | [github.com/OmitHasanAdor/easybuy-server](https://github.com/OmitHasanAdor/easybuy-server) |
-| ⚙️ Server API | [easybuy-server-q1y8.onrender.com](https://easybuy-server-q1y8.onrender.com) |
+| ⚙️ Server API | [https://easybuy-server-kszk.onrender.com](https://easybuy-server-kszk.onrender.com) |
