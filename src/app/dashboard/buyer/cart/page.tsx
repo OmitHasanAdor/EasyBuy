@@ -6,8 +6,11 @@ import { motion } from "framer-motion";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart-context";
+import { useRouter } from "next/navigation";
 
 export default function BuyerCartPage() {
+
+  const router = useRouter();
   const { items, removeItem, updateQty, totalCount } = useCart();
 
   const subtotal = items.reduce(
@@ -182,7 +185,7 @@ export default function BuyerCartPage() {
               </div>
 
               <button
-                onClick={() => toast.info("Checkout is coming soon")}
+                onClick={() => router.push("/checkout")}
                 className="mt-6 w-full rounded-sm bg-[#2B2420] py-3.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90"
               >
                 Proceed to Checkout
