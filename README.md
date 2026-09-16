@@ -34,8 +34,8 @@
 
 ## 🚧 In Progress
 
-* **Authentication:** Buyer/seller/admin sign-up and login, powered by Better-Auth.
-* **Role-Based Dashboards:** Dedicated dashboards for buyers (orders & wishlist), sellers (product & sales management), and admins (user & listing moderation).
+* **Payment Gateway:** Implementing Bangladeshi payment Gateway SSLCommerz.
+* **AI Chatbot:** Ai Chatbot will be help users to find their suitable product.
 * **Live Database Integration:** Connecting the Prisma schema to a production PostgreSQL database.
 
 ---
@@ -47,4 +47,4 @@
 | 🌐 Live Site | [easy-buy-ruddy.vercel.app](https://easy-buy-ruddy.vercel.app/) |
 | 💻 Client Repository | [github.com/OmitHasanAdor/EasyBuy](https://github.com/OmitHasanAdor/EasyBuy) |
 | 🖥️ Server Repository | [github.com/OmitHasanAdor/easybuy-server](https://github.com/OmitHasanAdor/easybuy-server) |
-| ⚙️ Server API | [easybuy-server-q1y8.onrender.com](https://easybuy-server-q1y8.onrender.com) |
+| ⚙️ Server API | [https://easybuy-server-kszk.onrender.com](https://easybuy-server-kszk.onrender.com) |

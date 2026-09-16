@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -25,7 +26,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => {
+    if (typeof window !== "undefined") {
+      const err = new URLSearchParams(window.location.search).get("error");
+      if (err) {
+        return err === "access_denied" ? "Google sign-in was cancelled." : err;
+      }
+    }
+    return "";
+  });
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -178,9 +187,18 @@ export default function LoginPage() {
       <motion.div variants={item} className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-[#E7DCC4]" />
         <span className="text-[11px] font-medium uppercase tracking-[2px] text-[#5B5145]/50">
-          or
+          or continue with
         </span>
         <div className="h-px flex-1 bg-[#E7DCC4]" />
+      </motion.div>
+
+      {/* ── Social Login ── */}
+      <motion.div variants={item} className="mb-6">
+        <GoogleSignInButton
+          text="Sign in with Google"
+          callbackURL="/profile"
+          onError={(msg) => setError(msg)}
+        />
       </motion.div>
 
       {/* ── Sign-up link ── */}
