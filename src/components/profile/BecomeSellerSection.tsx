@@ -248,7 +248,7 @@ export default function BecomeSellerSection({
                         </label>
                         <input
                             type="tel"
-                            placeholder="+1 (555) 000-0000"
+                            placeholder="01XXXXXXXXX"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-colors"
