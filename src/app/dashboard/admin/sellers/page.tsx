@@ -1,3 +1,4 @@
+import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
 import { auth } from "@/lib/auth";
@@ -21,7 +22,7 @@ async function getSellers(): Promise<Seller[]> {
   const token = (session as { session?: { token?: string } })?.session?.token;
   if (!token) return [];
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/sellers`, {
+  const res = await fetch(`${API_URL}/api/admin/sellers`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });

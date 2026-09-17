@@ -1,3 +1,4 @@
+import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
@@ -45,7 +46,7 @@ async function getDashboard(): Promise<DashboardData | null> {
   if (!token) return null;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`,
+    `${API_URL}/api/admin/dashboard`,
     {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",

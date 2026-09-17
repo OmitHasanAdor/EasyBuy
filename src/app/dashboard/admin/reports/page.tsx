@@ -1,3 +1,4 @@
+import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
 import { auth } from "@/lib/auth";
@@ -36,7 +37,7 @@ async function getReports(): Promise<ReportsData | null> {
   const token = (session as { session?: { token?: string } })?.session?.token;
   if (!token) return null;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/reports`, {
+  const res = await fetch(`${API_URL}/api/admin/reports`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
