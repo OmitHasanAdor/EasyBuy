@@ -15,9 +15,6 @@ const shopLinks = [
   "Brand Registry",
   "Sitemap",
   "Blog",
-  "United Kingdom",
-  "Germany",
-  "Canada",
 ];
 const sellLinks = ["Sell with us", "Teams", "Forums", "Affiliates & Creators"];
 const aboutLinks = [
@@ -139,7 +136,7 @@ export default function Footer() {
           <div className="flex flex-wrap items-center gap-5">
             <span className="flex items-center gap-1.5">
               <Globe size={15} className="text-[#8E3D14]" />
-              Bangladesh
+              Delivering across Bangladesh
             </span>
             <div className="flex items-center gap-4">
               {[
