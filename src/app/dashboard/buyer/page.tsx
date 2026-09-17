@@ -2,10 +2,7 @@ import { requireRole } from "@/lib/session";
 import Link from "next/link";
 import Image from "next/image";
 import { Package, Clock, CheckCircle2, Wallet } from "lucide-react";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://easybuy-server-q1y8.onrender.com";
+import { serverApiFetch } from "@/lib/server-api";
 
 type OrderProduct = {
   id: number;
@@ -52,14 +49,10 @@ const STATUS_STYLES: Record<string, string> = {
 export default async function BuyerDashboard() {
   const user = await requireRole("buyer");
 
-  const response = await fetch(
-    `${API_URL}/api/orders?userId=${user.id}`,
-    {
-      cache: "no-store",
-    }
-  );
+  // The API returns the orders of whoever owns the session token
+  const response = await serverApiFetch("/api/orders");
 
-  if (!response.ok) {
+  if (!response || !response.ok) {
     throw new Error("Failed to fetch orders");
   }
 

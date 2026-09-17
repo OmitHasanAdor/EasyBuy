@@ -1,9 +1,6 @@
 import { requireRole } from "@/lib/session";
+import { serverApiFetch } from "@/lib/server-api";
 import OrdersClient from "./OrdersClient";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://easybuy-server-q1y8.onrender.com";
 
 export type OrderProduct = {
   id: number;
@@ -39,19 +36,14 @@ export type Order = {
   items: OrderItem[];
 };
 
-// সার্ভার কম্পোনেন্ট – এখানে try/catch ব্যবহার করবেন না
+// Server Component: no try/catch here, a failed request goes to error.tsx
 export default async function OrdersPage() {
-  const user = await requireRole("buyer");
+  await requireRole("buyer");
 
-  const response = await fetch(
-    `${API_URL}/api/orders?userId=${user.id}`,
-    {
-      cache: "no-store",
-    }
-  );
+  // The API returns the orders of whoever owns the session token
+  const response = await serverApiFetch("/api/orders");
 
-  // যদি API fail করে, তাহলে error throw করুন (Next.js automatic error handling)
-  if (!response.ok) {
+  if (!response || !response.ok) {
     throw new Error("Failed to fetch orders");
   }
 
