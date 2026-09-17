@@ -31,8 +31,6 @@ export default function AddProductForm({ token }: Props) {
   const [discountPercent, setDiscountPercent] = useState("")
   const [saleEndsAt, setSaleEndsAt] = useState("")
 
-  const [isBestSeller, setIsBestSeller] = useState(false)
-
   const [variants, setVariants] = useState<Variant[]>([])
 
   const [loading, setLoading] = useState(false)
@@ -124,8 +122,6 @@ export default function AddProductForm({ token }: Props) {
         saleEndsAt: saleEndsAt
           ? new Date(saleEndsAt).toISOString()
           : null,
-
-        isBestSeller,
 
         variants: hasVariants
           ? variants.map((variant) => ({
@@ -488,18 +484,9 @@ export default function AddProductForm({ token }: Props) {
           </div>
         </div>
 
-        <label className="mt-5 flex cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            checked={isBestSeller}
-            onChange={(e) => setIsBestSeller(e.target.checked)}
-            className="h-4 w-4"
-          />
-
-          <span className="text-sm font-medium text-[#2B2420]">
-            Mark as Best Seller
-          </span>
-        </label>
+        <p className="mt-5 text-xs text-[#8E3D14]/60">
+          The Best Seller badge is given by the EasyBuy team based on sales.
+        </p>
       </div>
 
       {/* Error / Success */}
