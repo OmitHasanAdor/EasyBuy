@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,48 +12,29 @@ import { useWishlist } from "@/lib/wishlist";
 import { authClient } from "@/lib/auth-client";
 import { authFetch } from "@/lib/auth-fetch";
 
+type CurrentUser = { id: string; role: string };
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [userRole, setUserRole] = useState<string | null>(null);
 
   const router = useRouter();
   const { totalCount } = useCart();
   const { count: wishlistCount } = useWishlist();
 
-  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const { data: session } = authClient.useSession();
   const userId = session?.user?.id ?? null;
 
-  // Get current user's role from the session (never look users up by email)
-  useEffect(() => {
-    if (sessionLoading) return;
-
-    if (!userId) {
-      setUserRole(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const response = await authFetch(`${API_URL}/api/me`);
-        if (!response.ok) {
-          if (!cancelled) setUserRole(null);
-          return;
-        }
-        const data = await response.json();
-        if (!cancelled) setUserRole(data.role ?? "buyer");
-      } catch (error) {
-        console.error("Failed to fetch user role:", error);
-        if (!cancelled) setUserRole(null);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, sessionLoading]);
+  // Current user's role, taken from the session token (never looked up by email)
+  const { data: me } = useQuery<CurrentUser | null>({
+    queryKey: ["me", userId],
+    queryFn: async () => {
+      const response = await authFetch(`${API_URL}/api/me`);
+      return response.ok ? response.json() : null;
+    },
+    enabled: !!userId,
+  });
+  const userRole = userId ? (me?.role ?? null) : null;
 
   // Shared cache for category queries
   const { data: categories = [] } = useQuery<string[]>({
