@@ -115,12 +115,13 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (hasVariants && !matchedVariant) {
       toast.error("Please select a size/color first.");
       return;
     }
-    const success = addItem({
+    // addItem shows its own error (e.g. not enough stock) when it fails
+    const success = await addItem({
       id: product.id,
       variantId: matchedVariant?.id ?? null,
       name: product.name,
@@ -132,8 +133,6 @@ export default function ProductDetailPage() {
     });
     if (success) {
       toast.success(`${product.name} added to cart`);
-    } else {
-      toast.error("Couldn't add to cart. Please try again.");
     }
   };
 
