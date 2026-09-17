@@ -16,7 +16,7 @@ import {
   Wallet,
   Star,
   Settings,
-  MessageSquareText,
+  // MessageSquareText,
   Bell,
   HelpCircle,
   LogOut,
