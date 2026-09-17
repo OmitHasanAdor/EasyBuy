@@ -17,9 +17,18 @@ export default function CheckoutCancelPage() {
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
           {orderId
-            ? `You cancelled payment for order #${orderId}.`
+            ? `You cancelled payment for order #${orderId}. Your items are still in your cart.`
             : "You cancelled the payment."}
         </p>
+        {orderId && (
+          <p className="mt-2 text-xs text-neutral-400">
+            If the unpaid order still shows as pending, you can cancel it from{" "}
+            <Link href="/dashboard/buyer/orders" className="underline hover:text-[#C05620]">
+              My Orders
+            </Link>
+            .
+          </p>
+        )}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/dashboard/buyer/cart"
