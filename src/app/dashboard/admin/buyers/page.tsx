@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
@@ -29,6 +30,10 @@ async function getBuyers(): Promise<Buyer[]> {
   if (!res.ok) return [];
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Buyer Management",
+};
 
 export default async function AdminBuyersPage() {
   await requireRole("admin");

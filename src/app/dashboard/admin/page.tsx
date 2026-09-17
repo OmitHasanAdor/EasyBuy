@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -60,6 +61,10 @@ async function getDashboard(): Promise<DashboardData | null> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Overview",
+};
 
 export default async function AdminDashboardPage() {
   const user = await requireRole("admin");

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
@@ -32,6 +33,10 @@ async function getProducts(): Promise<Product[]> {
   if (!res.ok) return [];
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Product Moderation",
+};
 
 export default async function AdminProductsPage() {
   await requireRole("admin");

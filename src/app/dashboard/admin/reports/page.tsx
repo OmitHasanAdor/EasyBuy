@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
@@ -44,6 +45,10 @@ async function getReports(): Promise<ReportsData | null> {
   if (!res.ok) return null;
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Reports & Analytics",
+};
 
 export default async function AdminReportsPage() {
   await requireRole("admin");
