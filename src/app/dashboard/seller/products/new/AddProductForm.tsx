@@ -4,6 +4,7 @@ import { API_URL } from "@/config/api";
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
+import { MAX_DISCOUNT_PERCENT } from "@/lib/pricing"
 
 type Variant = {
   size: string
@@ -96,6 +97,16 @@ export default function AddProductForm({ token }: Props) {
 
     if (!hasVariants && Number(stock) < 0) {
       setError("Stock cannot be negative")
+      return
+    }
+
+    if (
+      discountPercent !== "" &&
+      (!Number.isInteger(Number(discountPercent)) ||
+        Number(discountPercent) < 0 ||
+        Number(discountPercent) > MAX_DISCOUNT_PERCENT)
+    ) {
+      setError(`Discount must be a whole number between 0 and ${MAX_DISCOUNT_PERCENT}%`)
       return
     }
 
@@ -459,12 +470,12 @@ export default function AddProductForm({ token }: Props) {
             <input
               type="number"
               min="0"
-              max="100"
+              max={MAX_DISCOUNT_PERCENT}
               value={discountPercent}
               onChange={(e) =>
                 setDiscountPercent(e.target.value)
               }
-              placeholder="0 - 100"
+              placeholder={`0 - ${MAX_DISCOUNT_PERCENT}`}
               className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
             />
           </div>
