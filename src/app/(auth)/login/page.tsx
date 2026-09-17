@@ -124,9 +124,13 @@ async function handleSubmit(e: React.FormEvent) {
             >
               Password
             </label>
-            <span className="text-[12px] font-medium text-[#C05620] transition-opacity hover:opacity-70 cursor-pointer">
+            {/* no reset-by-email flow yet: the Help Center explains the options */}
+            <Link
+              href="/help"
+              className="text-[12px] font-medium text-[#C05620] transition-opacity hover:opacity-70"
+            >
               Forgot password?
-            </span>
+            </Link>
           </div>
           <div className="relative">
             <Lock
