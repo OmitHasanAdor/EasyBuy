@@ -1,5 +1,6 @@
 "use client";
 
+import { API_URL } from "@/config/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -23,7 +24,7 @@ export function DeleteProductButton({ productId, productName }: Props) {
     try {
       // Get token from cookie or your auth client — adjust if needed
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/seller/products/${productId}`,
+        `${API_URL}/api/seller/products/${productId}`,
         {
           method: "DELETE",
           credentials: "include",

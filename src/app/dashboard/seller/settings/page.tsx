@@ -1,3 +1,4 @@
+import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
 import { auth } from "@/lib/auth";
@@ -22,7 +23,7 @@ async function getProfile(): Promise<Profile | null> {
   if (!token) return null;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/profile`,
+    `${API_URL}/api/seller/profile`,
     {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",

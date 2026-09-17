@@ -1,5 +1,6 @@
 "use client"
 
+import { API_URL } from "@/config/api";
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
@@ -140,7 +141,7 @@ export default function AddProductForm({ token }: Props) {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/seller/products`,
+        `${API_URL}/api/seller/products`,
         {
           method: "POST",
           headers: {

@@ -1,3 +1,4 @@
+import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
@@ -33,7 +34,7 @@ async function getSellerOrders(status?: string): Promise<SellerOrder[]> {
   const token = (session as any).session?.token as string | undefined;
   if (!token) return [];
 
-  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/seller/orders`);
+  const url = new URL(`${API_URL}/api/seller/orders`);
   if (status) url.searchParams.set("status", status);
 
   const res = await fetch(url.toString(), {
