@@ -31,11 +31,15 @@ const FAQ_GROUPS = [
       },
       {
         q: "Can I cancel an order?",
-        a: "You can cancel while the order is still Pending. Once it is Shipped, please contact support for help.",
+        a: "Yes, while it is still Pending: open Dashboard → My Orders, expand the order and choose Cancel order. Orders that are already shipped or paid online can't be cancelled there, so please contact support.",
       },
       {
         q: "How do returns work?",
         a: "If an item is damaged or not as described, contact support within 7 days of delivery with your order ID and photos.",
+      },
+      {
+        q: "Who can review a product?",
+        a: "Buyers who received the product. The review form on the product page opens once your order is marked Delivered, and you can edit or delete your review later.",
       },
     ],
   },
@@ -67,7 +71,7 @@ const FAQ_GROUPS = [
     items: [
       {
         q: "What payment methods are accepted?",
-        a: "EasyBuy supports common local payment options. Available methods are shown at checkout.",
+        a: "Cash on delivery, or online payment by card or mobile banking (such as bKash and Nagad) through SSLCommerz. Online payments are made on SSLCommerz's secure page.",
       },
       {
         q: "Why was my order cancelled?",
@@ -85,7 +89,7 @@ const FAQ_GROUPS = [
       },
       {
         q: "I forgot my password",
-        a: "Use the Forgot Password link on the login page. You will receive a reset link by email.",
+        a: "Password reset by email isn't available yet. If you signed up with Google, use Sign in with Google; otherwise email support@easybuy.com and we'll help you get back into your account.",
       },
     ],
   },
