@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ShieldCheck, Users } from "lucide-react";
 import FadeInView from "@/components/FadeInView";
 
@@ -30,12 +31,12 @@ export default function WhatIsEasyBuy() {
           <h2 className="font-serif text-4xl font-medium text-[#2B2420] sm:text-[44px]">
             What is EasyBuy?
           </h2>
-          <a
-            href="#"
+          <Link
+            href="/about"
             className="mt-4 inline-block text-sm font-medium text-[#8E3D14] underline decoration-dotted underline-offset-4 transition-colors hover:text-[#C05620]"
           >
             Read our story
-          </a>
+          </Link>
         </FadeInView>
 
         {/* ── Cards ── */}
@@ -93,12 +94,12 @@ export default function WhatIsEasyBuy() {
           <p className="font-serif text-lg font-medium text-[#2B2420]">
             Have a question? We&apos;ve got answers.
           </p>
-          <a
-            href="#"
+          <Link
+            href="/help"
             className="inline-flex items-center rounded-full border border-[#2B2420] px-6 py-2.5 text-sm font-semibold text-[#2B2420] transition-all duration-300 hover:bg-[#2B2420] hover:text-[#F7F2E7]"
           >
             Go to Help Center
-          </a>
+          </Link>
         </FadeInView>
 
       </div>
