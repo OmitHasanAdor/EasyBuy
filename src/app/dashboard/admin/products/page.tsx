@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/session";
 import { auth } from "@/lib/auth";
 import { Package } from "lucide-react";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { BestSellerToggle } from "./BestSellerToggle";
 
 type Product = {
   id: number;
@@ -12,6 +13,7 @@ type Product = {
   category: string;
   stock: number;
   images: string[];
+  isBestSeller: boolean;
   createdAt: string;
   seller: { id: string; name: string; email: string } | null;
   _count: { orderItems: number; reviews: number };
@@ -63,6 +65,7 @@ export default async function AdminProductsPage() {
                   <th className="px-4 py-3 font-medium text-[#2B2420]">Price</th>
                   <th className="px-4 py-3 font-medium text-[#2B2420]">Stock</th>
                   <th className="px-4 py-3 font-medium text-[#2B2420]">Orders</th>
+                  <th className="px-4 py-3 font-medium text-[#2B2420]">Badge</th>
                   <th className="px-4 py-3 font-medium text-[#2B2420] text-right">Actions</th>
                 </tr>
               </thead>
@@ -87,6 +90,9 @@ export default async function AdminProductsPage() {
                     <td className="px-4 py-3 text-[#2B2420]">৳{p.price.toLocaleString()}</td>
                     <td className="px-4 py-3 text-[#3A342C]">{p.stock}</td>
                     <td className="px-4 py-3 text-[#3A342C]">{p._count.orderItems}</td>
+                    <td className="px-4 py-3">
+                      <BestSellerToggle productId={p.id} isBestSeller={p.isBestSeller} />
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <DeleteProductButton productId={p.id} name={p.name} />
                     </td>
