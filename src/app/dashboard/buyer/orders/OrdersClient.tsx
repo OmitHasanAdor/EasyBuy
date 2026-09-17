@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Loader2, Package } from "lucide-react";
 import { toast } from "sonner";
 import { API_URL } from "@/config/api";
 import { authFetch } from "@/lib/auth-fetch";
+import { ORDER_STATUSES } from "@/lib/orders";
 import type { Order } from "./page";
 
 const CANCEL_ERROR = "Couldn't cancel the order. Please try again.";
@@ -28,7 +30,8 @@ const STATUS_STYLES: Record<string, string> = {
     CANCELLED: "bg-red-100 text-red-800",
 };
 
-const STATUS_OPTIONS = ["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+// CONFIRMED was listed here but no order ever has that status
+const STATUS_OPTIONS = ["ALL", ...ORDER_STATUSES];
 
 export default function OrdersClient({ orders }: OrdersClientProps) {
     const [mounted, setMounted] = useState(false);
@@ -64,8 +67,23 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
 
     if (!orders || orders.length === 0) {
         return (
-            <div className="px-6 py-8 text-center">
-                <p className="text-red-600">No orders found</p>
+            <div className="px-6 py-8 sm:px-10">
+                <h1 className="font-serif text-2xl font-medium text-[#2B2420]">My Orders</h1>
+                <div className="mt-6 rounded-lg border border-dashed border-[#E7DCC4] bg-white p-12 text-center">
+                    <Package className="mx-auto h-12 w-12 text-[#C05620]/40" />
+                    <h3 className="mt-4 font-serif text-lg font-medium text-[#2B2420]">
+                        No orders yet
+                    </h3>
+                    <p className="mt-1 text-sm text-[#5B5145]">
+                        When you place an order, you can follow it here.
+                    </p>
+                    <Link
+                        href="/products"
+                        className="mt-5 inline-block rounded-sm bg-[#2B2420] px-5 py-2.5 text-sm font-semibold text-[#F7F2E7]"
+                    >
+                        Browse Products
+                    </Link>
+                </div>
             </div>
         );
     }
