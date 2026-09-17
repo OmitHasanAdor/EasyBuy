@@ -7,9 +7,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-// import { API_URL } from "@/config/api";
 
 const ease = [0.22, 1, 0.36, 1] as const;
+
+// Where to go after signing in. Only same-site paths are accepted so the
+// callbackUrl parameter can't be used to send users to another website.
+function getRedirectTarget() {
+  if (typeof window === "undefined") return "/post-auth";
+  const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+  // "//evil.com" and "/\evil.com" are protocol-relative URLs to other hosts
+  if (callbackUrl && /^\/(?![/\\])/.test(callbackUrl)) {
+    return callbackUrl;
+  }
+  // /post-auth reads the role on the server and opens the right dashboard
+  return "/post-auth";
+}
 
 /* ── stagger container ── */
 const container = {
@@ -53,29 +65,9 @@ async function handleSubmit(e: React.FormEvent) {
     return;
   }
 
-  try {
-    // Role from your existing API (same DB)
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/user-role?email=${encodeURIComponent(email)}`
-    );
-    const data = await res.json().catch(() => ({}));
-    const role = (data.role as string) || "buyer";
-
-    const dest =
-      role === "admin"
-        ? "/dashboard/admin"
-        : role === "seller"
-        ? "/dashboard/seller/profile"
-        : "/dashboard/buyer/profile";
-
-    router.push(dest);
-    router.refresh();
-  } catch {
-    router.push("/dashboard/buyer/profile");
-    router.refresh();
-  } finally {
-    setLoading(false);
-  }
+  router.push(getRedirectTarget());
+  router.refresh();
+  setLoading(false);
 }
 
   return (
@@ -220,7 +212,7 @@ async function handleSubmit(e: React.FormEvent) {
       <motion.div variants={item} className="mb-6">
         <GoogleSignInButton
           text="Sign in with Google"
-         callbackURL="/post-auth"
+          callbackURL={getRedirectTarget()}
           onError={(msg) => setError(msg)}
         />
       </motion.div>
