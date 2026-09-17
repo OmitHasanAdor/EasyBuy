@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { API_URL } from "@/config/api";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { ClipboardList } from "lucide-react";
 import { OrderStatusSelect } from "./OrderStatusSelect";
 
@@ -24,19 +22,9 @@ type Order = {
 };
 
 async function getOrders(status?: string): Promise<Order[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const url = new URL(`${API_URL}/api/admin/orders`);
-  if (status) url.searchParams.set("status", status);
-
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await serverApiFetch(`/api/admin/orders${query}`);
+  if (!res || !res.ok) return [];
   return res.json();
 }
 

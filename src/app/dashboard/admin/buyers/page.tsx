@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { API_URL } from "@/config/api";
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Users } from "lucide-react";
 import { BuyerActions } from "./BuyerActions";
 
@@ -18,16 +16,8 @@ type Buyer = {
 };
 
 async function getBuyers(): Promise<Buyer[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(`${API_URL}/api/admin/buyers`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/admin/buyers");
+  if (!res || !res.ok) return [];
   return res.json();
 }
 

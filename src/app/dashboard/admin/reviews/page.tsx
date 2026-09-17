@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { API_URL } from "@/config/api";
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Star } from "lucide-react";
 import { DeleteReviewButton } from "./DeleteReviewButton";
 
@@ -18,16 +16,8 @@ type Review = {
 };
 
 async function getReviews(): Promise<Review[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(`${API_URL}/api/admin/reviews`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/admin/reviews");
+  if (!res || !res.ok) return [];
   return res.json();
 }
 

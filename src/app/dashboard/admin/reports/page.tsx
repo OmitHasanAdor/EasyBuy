@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { API_URL } from "@/config/api";
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import {
   BarChart3,
   TrendingUp,
@@ -33,16 +31,8 @@ type ReportsData = {
 };
 
 async function getReports(): Promise<ReportsData | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return null;
-
-  const res = await fetch(`${API_URL}/api/admin/reports`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
+  const res = await serverApiFetch("/api/admin/reports");
+  if (!res || !res.ok) return null;
   return res.json();
 }
 
