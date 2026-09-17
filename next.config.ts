@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
 
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
    images: {
-    dangerouslyAllowSVG: true, 
+    dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     remotePatterns: [
       {
@@ -27,4 +28,17 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default function config(phase: string): NextConfig {
+  // NEXT_PUBLIC_API_URL is baked into the bundle at build time. Stop the
+  // production build with a clear message instead of deploying a site whose
+  // dashboards call "undefined/api/..." (EB-05).
+  if (phase === PHASE_PRODUCTION_BUILD && !process.env.NEXT_PUBLIC_API_URL) {
+    throw new Error(
+      "NEXT_PUBLIC_API_URL is not set. Add it to .env.local or to the Vercel " +
+        "project's Environment Variables (e.g. https://easybuy-server-kszk.onrender.com) " +
+        "and build again."
+    );
+  }
+
+  return nextConfig;
+}
