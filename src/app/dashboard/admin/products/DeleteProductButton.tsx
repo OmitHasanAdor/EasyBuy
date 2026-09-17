@@ -24,7 +24,9 @@ export function DeleteProductButton({
         method: "DELETE",
       });
       if (!res.ok) {
-        alert("Failed to delete");
+        // e.g. "This product appears in orders and can't be deleted"
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete");
         return;
       }
       router.refresh();

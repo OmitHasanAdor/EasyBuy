@@ -1,8 +1,10 @@
 "use client";
 
+import { API_URL } from "@/config/api";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { authFetch } from "@/lib/auth-fetch";
 
 type Props = {
   productId: number;
@@ -21,17 +23,10 @@ export function DeleteProductButton({ productId, productName }: Props) {
 
     setLoading(true);
     try {
-      // Get token from cookie or your auth client — adjust if needed
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/seller/products/${productId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: {
-            // If you store token in localStorage/cookie, add Authorization here
-          },
-        }
-      );
+      // The API authenticates with the Bearer session token, not cookies
+      const res = await authFetch(`${API_URL}/api/seller/products/${productId}`, {
+        method: "DELETE",
+      });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

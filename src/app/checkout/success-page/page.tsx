@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { authFetch } from "@/lib/auth-fetch";
 import { API_URL } from "@/config/api";
 
 export default function CheckoutSuccessPage() {
   const params = useSearchParams();
+  const queryClient = useQueryClient();
   const orderId = params.get("orderId");
   const tranId = params.get("tran_id");
   const valId = params.get("val_id");
@@ -35,6 +37,10 @@ export default function CheckoutSuccessPage() {
           }),
         });
         const data = await res.json().catch(() => ({}));
+        if (data.paymentStatus === "PAID") {
+          // paid items were removed from the cart on the server
+          queryClient.invalidateQueries({ queryKey: ["cart"] });
+        }
         if (!cancelled) {
           setStatus(data.paymentStatus ?? null);
         }
@@ -48,7 +54,7 @@ export default function CheckoutSuccessPage() {
     return () => {
       cancelled = true;
     };
-  }, [tranId, valId]);
+  }, [tranId, valId, queryClient]);
 
   return (
     <section className="flex min-h-[60vh] items-center justify-center bg-[#FBF8F1] px-6">

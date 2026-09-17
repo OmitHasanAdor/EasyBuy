@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { Settings } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Site Settings",
+};
 
 export default async function AdminSettingsPage() {
   await requireRole("admin");

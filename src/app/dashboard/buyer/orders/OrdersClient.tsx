@@ -2,8 +2,21 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronUp, Loader2, Package } from "lucide-react";
+import { toast } from "sonner";
+import { API_URL } from "@/config/api";
+import { authFetch } from "@/lib/auth-fetch";
+import { ORDER_STATUSES } from "@/lib/orders";
 import type { Order } from "./page";
+
+const CANCEL_ERROR = "Couldn't cancel the order. Please try again.";
+
+// Buyers can cancel while the order is pending and not paid online yet
+function canCancel(order: Order) {
+    return order.status === "PENDING" && order.paymentStatus !== "PAID";
+}
 
 type OrdersClientProps = {
     orders: Order[];
@@ -17,12 +30,36 @@ const STATUS_STYLES: Record<string, string> = {
     CANCELLED: "bg-red-100 text-red-800",
 };
 
-const STATUS_OPTIONS = ["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"];
+// CONFIRMED was listed here but no order ever has that status
+const STATUS_OPTIONS = ["ALL", ...ORDER_STATUSES];
 
 export default function OrdersClient({ orders }: OrdersClientProps) {
     const [mounted, setMounted] = useState(false);
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+    const [cancellingId, setCancellingId] = useState<number | null>(null);
+    const router = useRouter();
+
+    async function cancelOrder(orderId: number) {
+        if (!confirm(`Cancel order #${orderId}?`)) return;
+        setCancellingId(orderId);
+        try {
+            const res = await authFetch(`${API_URL}/api/orders/${orderId}/cancel`, {
+                method: "POST",
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(data.error || CANCEL_ERROR);
+                return;
+            }
+            toast.success(`Order #${orderId} was cancelled`);
+            router.refresh();
+        } catch {
+            toast.error(CANCEL_ERROR);
+        } finally {
+            setCancellingId(null);
+        }
+    }
 
     useEffect(() => {
         setMounted(true);
@@ -30,8 +67,23 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
 
     if (!orders || orders.length === 0) {
         return (
-            <div className="px-6 py-8 text-center">
-                <p className="text-red-600">No orders found</p>
+            <div className="px-6 py-8 sm:px-10">
+                <h1 className="font-serif text-2xl font-medium text-[#2B2420]">My Orders</h1>
+                <div className="mt-6 rounded-lg border border-dashed border-[#E7DCC4] bg-white p-12 text-center">
+                    <Package className="mx-auto h-12 w-12 text-[#C05620]/40" />
+                    <h3 className="mt-4 font-serif text-lg font-medium text-[#2B2420]">
+                        No orders yet
+                    </h3>
+                    <p className="mt-1 text-sm text-[#5B5145]">
+                        When you place an order, you can follow it here.
+                    </p>
+                    <Link
+                        href="/products"
+                        className="mt-5 inline-block rounded-sm bg-[#2B2420] px-5 py-2.5 text-sm font-semibold text-[#F7F2E7]"
+                    >
+                        Browse Products
+                    </Link>
+                </div>
             </div>
         );
     }
@@ -109,9 +161,9 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-4">
                                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F2EADA]">
-                                            {firstItem?.product?.imageUrl && (
+                                            {firstItem?.product?.images?.[0] && (
                                                 <Image
-                                                    src={firstItem.product.imageUrl}
+                                                    src={firstItem.product.images[0]}
                                                     alt={firstItem.product.name}
                                                     fill
                                                     className="object-cover"
@@ -179,9 +231,9 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                                     className="flex items-center gap-4 rounded-lg bg-[#FAF7F0] p-3"
                                                 >
                                                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-white">
-                                                        {item.product?.imageUrl && (
+                                                        {item.product?.images?.[0] && (
                                                             <Image
-                                                                src={item.product.imageUrl}
+                                                                src={item.product.images[0]}
                                                                 alt={item.product.name}
                                                                 fill
                                                                 className="object-cover"
@@ -209,6 +261,22 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                                 ৳{order.total.toLocaleString()}
                                             </span>
                                         </div>
+
+                                        {canCancel(order) && (
+                                            <div className="mt-3 flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => cancelOrder(order.id)}
+                                                    disabled={cancellingId === order.id}
+                                                    className="inline-flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                                                >
+                                                    {cancellingId === order.id && (
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    )}
+                                                    Cancel order
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -1,13 +1,15 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { ClipboardList } from "lucide-react";
 import { OrderStatusSelect } from "./OrderStatusSelect";
 
 type Order = {
   id: number;
   status: string;
+  paymentMethod: string | null;
+  paymentStatus: string;
   total: number;
   createdAt: string;
   user: { id: string; name: string; email: string };
@@ -20,19 +22,9 @@ type Order = {
 };
 
 async function getOrders(status?: string): Promise<Order[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/orders`);
-  if (status) url.searchParams.set("status", status);
-
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await serverApiFetch(`/api/admin/orders${query}`);
+  if (!res || !res.ok) return [];
   return res.json();
 }
 
@@ -43,6 +35,10 @@ const FILTERS = [
   { label: "Delivered", value: "DELIVERED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
+
+export const metadata: Metadata = {
+  title: "All Orders",
+};
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -106,6 +102,24 @@ export default async function AdminOrdersPage({
                     {order.user.name} · {order.user.email} ·{" "}
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
+                  {order.paymentMethod && (
+                    <p className="mt-1 text-xs">
+                      <span className="text-[#8E3D14]/70">
+                        {order.paymentMethod === "COD" ? "Cash on delivery" : "Online payment"} ·{" "}
+                      </span>
+                      <span
+                        className={`font-semibold ${
+                          order.paymentStatus === "PAID"
+                            ? "text-green-700"
+                            : order.paymentStatus === "FAILED"
+                            ? "text-red-700"
+                            : "text-amber-700"
+                        }`}
+                      >
+                        {order.paymentStatus}
+                      </span>
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <OrderStatusSelect orderId={order.id} status={order.status} />

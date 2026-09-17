@@ -17,9 +17,18 @@ export default function CheckoutFailPage() {
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
           {orderId
-            ? `Order #${orderId} could not be paid. You can try again from cart.`
+            ? `Order #${orderId} could not be paid. Your items are still in your cart, so you can try again.`
             : "Payment was not completed."}
         </p>
+        {orderId && (
+          <p className="mt-2 text-xs text-neutral-400">
+            If the unpaid order still shows as pending, you can cancel it from{" "}
+            <Link href="/dashboard/buyer/orders" className="underline hover:text-[#C05620]">
+              My Orders
+            </Link>
+            .
+          </p>
+        )}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/dashboard/buyer/cart"

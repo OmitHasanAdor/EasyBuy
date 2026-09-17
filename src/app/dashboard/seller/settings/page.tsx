@@ -1,6 +1,6 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { StoreSettingsForm } from "./StoreSettingsForm";
 
 type Profile = {
@@ -15,19 +15,8 @@ type Profile = {
 };
 
 async function getProfile(): Promise<Profile | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
-
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return null;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/profile`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/seller/profile");
+  if (!res) return null;
 
   if (!res.ok) {
     console.error("Failed to fetch profile:", await res.text());
@@ -36,6 +25,10 @@ async function getProfile(): Promise<Profile | null> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Store Settings",
+};
 
 export default async function SellerSettingsPage() {
   await requireRole("seller");

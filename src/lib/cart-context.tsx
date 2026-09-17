@@ -11,9 +11,11 @@ import {
   type ReactNode,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { authFetch } from "@/lib/auth-fetch";
 import { API_URL } from "@/config/api";
+import { unitPrice } from "@/lib/pricing";
 
 // Supports product variants in the cart
 export type CartItem = {
@@ -32,7 +34,8 @@ type AddItemInput = Omit<CartItem, "qty" | "cartItemId"> & { qty?: number };
 
 type CartContextType = {
   items: CartItem[];
-  addItem: (item: AddItemInput) => boolean;
+  // resolves to false (after showing why) when the item could not be added
+  addItem: (item: AddItemInput) => Promise<boolean>;
   removeItem: (productId: number, variantId?: number | null) => boolean;
   updateQty: (productId: number, qty: number, variantId?: number | null) => boolean;
   totalCount: number;
@@ -40,6 +43,16 @@ type CartContextType = {
 
 const STORAGE_KEY = "easybuy-cart";
 const CartContext = createContext<CartContextType | null>(null);
+
+const CART_ERROR = "Couldn't update your cart. Please try again.";
+
+// Shows the API's reason (e.g. "Only 3 in stock") when a cart change is refused
+async function isCartRequestOk(res: Response) {
+  if (res.ok) return true;
+  const data = await res.json().catch(() => null);
+  toast.error(data?.error || CART_ERROR);
+  return false;
+}
 
 function readLocalCart(): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -66,8 +79,14 @@ type ServerCartRow = {
   productId: number;
   variantId: number | null;
   quantity: number;
-  product: { name: string; price: number; images: string[] };
-  variant: { size: string | null; color: string | null } | null;
+  product: {
+    name: string;
+    price: number;
+    images: string[];
+    discountPercent: number | null;
+    saleEndsAt: string | null;
+  };
+  variant: { size: string | null; color: string | null; price: number | null } | null;
 };
 
 function serverRowToCartItem(row: ServerCartRow): CartItem {
@@ -76,7 +95,8 @@ function serverRowToCartItem(row: ServerCartRow): CartItem {
     id: row.productId,
     variantId: row.variantId,
     name: row.product?.name ?? "",
-    price: row.product?.price ?? 0,
+    // same unit price the checkout charges (variant override + running sale)
+    price: row.product ? unitPrice(row.product, row.variant?.price) : 0,
     imageUrl: row.product?.images?.[0] ?? "",
     size: row.variant?.size ?? null,
     color: row.variant?.color ?? null,
@@ -149,19 +169,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const items = userId ? serverItems : guestItems;
 
   const addItem = useCallback(
-    (item: AddItemInput): boolean => {
+    async (item: AddItemInput): Promise<boolean> => {
       const qty = item.qty ?? 1;
       const variantId = item.variantId ?? null;
 
       if (userId) {
-        authFetch(`${API_URL}/api/cart`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId: item.id, variantId, quantity: qty }),
-        })
-          .catch(() => {})
-          .finally(() => queryClient.invalidateQueries({ queryKey: ["cart", userId] }));
-        return true;
+        // wait for the server: it may refuse because of stock (EB-07)
+        try {
+          const res = await authFetch(`${API_URL}/api/cart`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId: item.id, variantId, quantity: qty }),
+          });
+          return await isCartRequestOk(res);
+        } catch {
+          toast.error(CART_ERROR);
+          return false;
+        } finally {
+          queryClient.invalidateQueries({ queryKey: ["cart", userId] });
+        }
       }
 
       const existing = guestItems.find((i) => i.id === item.id && i.variantId === variantId);
@@ -170,7 +196,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             i.id === item.id && i.variantId === variantId ? { ...i, qty: i.qty + qty } : i
           )
         : [...guestItems, { ...item, variantId, qty }];
-      if (!writeLocalCart(next)) return false;
+      if (!writeLocalCart(next)) {
+        toast.error(CART_ERROR);
+        return false;
+      }
       setGuestItems(next);
       return true;
     },
@@ -207,7 +236,8 @@ const updateQty = useCallback(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quantity: qty }),
         })
-          .catch(() => {})
+          .then(isCartRequestOk)
+          .catch(() => toast.error(CART_ERROR))
           .finally(() => queryClient.invalidateQueries({ queryKey: ["cart", userId] }));
         return true;
       }
@@ -227,7 +257,7 @@ const updateQty = useCallback(
   if (sessionLoading) {
     return (
       <CartContext.Provider
-        value={{ items: [], addItem: () => false, removeItem: () => false, updateQty: () => false, totalCount: 0 }}
+        value={{ items: [], addItem: async () => false, removeItem: () => false, updateQty: () => false, totalCount: 0 }}
       >
         {children}
       </CartContext.Provider>

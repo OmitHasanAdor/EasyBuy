@@ -99,6 +99,41 @@ export default function BecomeSellerSection({
         );
     }
 
+    // If seller access was taken away after approval
+    if (existingRequest && existingRequest.status === "REVOKED" && !isReapplying) {
+        return (
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="flex items-start gap-4">
+                    <div className="p-3 bg-gray-500/10 rounded-xl text-gray-600 shrink-0">
+                        <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-3 flex-1">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900">Seller Access Revoked</h2>
+                            <p className="text-sm text-gray-600 mt-1">
+                                An administrator removed seller access from this account.
+                            </p>
+                        </div>
+
+                        {existingRequest.adminNote && (
+                            <div className="bg-white/80 rounded-xl p-3 border border-gray-200 text-xs text-gray-800">
+                                <strong>Admin Note:</strong> {existingRequest.adminNote}
+                            </div>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={() => setIsReapplying(true)}
+                            className="inline-flex items-center gap-1.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm"
+                        >
+                            <RefreshCw className="w-3.5 h-3.5" /> Apply again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // If previous request was rejected
     if (existingRequest && existingRequest.status === "REJECTED" && !isReapplying) {
         return (
@@ -213,7 +248,7 @@ export default function BecomeSellerSection({
                         </label>
                         <input
                             type="tel"
-                            placeholder="+1 (555) 000-0000"
+                            placeholder="01XXXXXXXXX"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-colors"

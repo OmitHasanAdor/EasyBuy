@@ -1,6 +1,6 @@
-import { headers } from "next/headers"
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session"
-import { auth } from "@/lib/auth"
+import { serverApiFetch } from "@/lib/server-api"
 import {
   Package,
   ShoppingCart,
@@ -48,25 +48,8 @@ type DashboardData = {
 }
 
 async function getSellerDashboard(): Promise<DashboardData | null> {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-
-  if (!session) return null
-
-  const token = (session as any).session?.token as string | undefined
-
-  if (!token) return null
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/dashboard`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
-  )
+  const res = await serverApiFetch("/api/seller/dashboard")
+  if (!res) return null
 
   if (!res.ok) {
     console.error("Failed to fetch seller dashboard:", await res.text())
@@ -99,6 +82,10 @@ function getStatusClass(status: string) {
       return "bg-gray-100 text-gray-700"
   }
 }
+
+export const metadata: Metadata = {
+  title: "Overview",
+};
 
 export default async function SellerOverviewPage() {
   await requireRole("seller")

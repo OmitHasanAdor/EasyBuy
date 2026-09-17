@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import {
   Bell,
@@ -29,6 +30,10 @@ const TYPE_ICON = {
   promo: Tag,
   wishlist: Heart,
   system: Bell,
+};
+
+export const metadata: Metadata = {
+  title: "Notifications",
 };
 
 export default async function BuyerNotificationsPage() {

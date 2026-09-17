@@ -1,12 +1,18 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import SignOutButton from "@/components/SignOutButton";
 import BecomeSellerSection from "@/components/profile/BecomeSellerSection";
-import AdminSellerRequests from "@/components/profile/AdminSellerRequests";
-import AdminUsersList from "@/components/profile/AdminUsersList";
+import AdminSellerRequests, { type SellerRequestItem } from "@/components/profile/AdminSellerRequests";
+import AdminUsersList, { type AdminUserData } from "@/components/profile/AdminUsersList";
 import { User, Mail, Shield, Phone, Calendar, CheckCircle2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "My Profile",
+  robots: { index: false },
+};
 
 export default async function ProfilePage() {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -34,8 +40,8 @@ export default async function ProfilePage() {
     }
 
     // For admins, fetch all seller applications and user lists
-    let allSellerRequests: any[] = [];
-    let allUsers: any[] = [];
+    let allSellerRequests: SellerRequestItem[] = [];
+    let allUsers: AdminUserData[] = [];
 
     if (isAdmin) {
         const [requests, users] = await Promise.all([

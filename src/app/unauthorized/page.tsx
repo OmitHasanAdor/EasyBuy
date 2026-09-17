@@ -69,7 +69,7 @@ export default function UnauthorizedPage() {
           Back to Homepage
         </Link>
         <Link
-          href="/auth/signin"
+          href="/login"
           className="inline-flex items-center gap-2 rounded-sm border-[1.5px] border-[#2B2420] px-7 py-3.5 text-sm font-semibold tracking-wide text-[#2B2420] transition-colors hover:bg-[#2B2420] hover:text-[#F7F2E7]"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={2} />

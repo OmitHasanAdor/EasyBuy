@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Plus, Package, Pencil } from "lucide-react";
 import { DeleteProductButton } from "./DeleteProductButton";
 
@@ -22,19 +22,8 @@ type Product = {
 };
 
 async function getSellerProducts(): Promise<Product[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as any).session?.token as string | undefined;
-  if (!token) return [];
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/products`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/seller/products");
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch seller products:", await res.text());
@@ -43,6 +32,10 @@ async function getSellerProducts(): Promise<Product[]> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "My Products",
+};
 
 export default async function SellerProductsPage() {
   await requireRole("seller");

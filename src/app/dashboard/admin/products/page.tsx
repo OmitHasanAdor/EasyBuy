@@ -1,8 +1,9 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Package } from "lucide-react";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { BestSellerToggle } from "./BestSellerToggle";
 
 type Product = {
   id: number;
@@ -11,24 +12,21 @@ type Product = {
   category: string;
   stock: number;
   images: string[];
+  isBestSeller: boolean;
   createdAt: string;
   seller: { id: string; name: string; email: string } | null;
   _count: { orderItems: number; reviews: number };
 };
 
 async function getProducts(): Promise<Product[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/admin/products");
+  if (!res || !res.ok) return [];
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Product Moderation",
+};
 
 export default async function AdminProductsPage() {
   await requireRole("admin");
@@ -62,6 +60,7 @@ export default async function AdminProductsPage() {
                   <th className="px-4 py-3 font-medium text-[#2B2420]">Price</th>
                   <th className="px-4 py-3 font-medium text-[#2B2420]">Stock</th>
                   <th className="px-4 py-3 font-medium text-[#2B2420]">Orders</th>
+                  <th className="px-4 py-3 font-medium text-[#2B2420]">Badge</th>
                   <th className="px-4 py-3 font-medium text-[#2B2420] text-right">Actions</th>
                 </tr>
               </thead>
@@ -86,6 +85,9 @@ export default async function AdminProductsPage() {
                     <td className="px-4 py-3 text-[#2B2420]">৳{p.price.toLocaleString()}</td>
                     <td className="px-4 py-3 text-[#3A342C]">{p.stock}</td>
                     <td className="px-4 py-3 text-[#3A342C]">{p._count.orderItems}</td>
+                    <td className="px-4 py-3">
+                      <BestSellerToggle productId={p.id} isBestSeller={p.isBestSeller} />
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <DeleteProductButton productId={p.id} name={p.name} />
                     </td>

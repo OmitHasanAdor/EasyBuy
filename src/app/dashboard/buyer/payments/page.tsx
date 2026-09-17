@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { CreditCard } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Payment Methods",
+};
 
 export default async function BuyerPaymentsPage() {
   await requireRole("buyer");

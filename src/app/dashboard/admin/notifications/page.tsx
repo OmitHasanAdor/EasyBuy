@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { Bell } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Notifications",
+};
 
 export default async function AdminNotificationsPage() {
   await requireRole("admin");

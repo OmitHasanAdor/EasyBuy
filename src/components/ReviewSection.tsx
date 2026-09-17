@@ -31,6 +31,17 @@ export default function ReviewSection({ productId }: { productId: number }) {
     queryFn: () => fetch(`${API_URL}/api/products/${productId}/reviews`).then((res) => res.json()),
   });
 
+  // Only buyers with a delivered order for this product may review it (EB-06)
+  const { data: eligibility, isPending: checkingEligibility } = useQuery<{ canReview: boolean }>({
+    queryKey: ["review-eligibility", productId, userId],
+    queryFn: async () => {
+      const res = await authFetch(`${API_URL}/api/products/${productId}/reviews/eligibility`);
+      return res.ok ? res.json() : { canReview: false };
+    },
+    enabled: !!userId,
+  });
+  const canReview = eligibility?.canReview ?? false;
+
   const myReview = userId ? reviews.find((r) => r.userId === userId) ?? null : null;
   const isEditing = !!myReview;
 
@@ -70,7 +81,11 @@ export default function ReviewSection({ productId }: { productId: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, title: title.trim() || undefined, comment: comment.trim() || undefined }),
       });
-      if (!res.ok) throw new Error("Request failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Couldn't save your review. Please try again.");
+        return;
+      }
       toast.success(isEditing ? "Review updated." : "Review saved. Thanks for sharing!");
       queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
       queryClient.invalidateQueries({ queryKey: ["product", productId] });
@@ -114,83 +129,94 @@ export default function ReviewSection({ productId }: { productId: number }) {
         )}
       </div>
 
-      {/* Write / edit a review */}
-      <div className="mb-10 rounded-lg border border-[#E7DCC4] bg-white p-5">
-        <div className="mb-3 flex items-center gap-2">
-          {isEditing && <Pencil className="h-3.5 w-3.5 text-[#8E3D14]" strokeWidth={2} />}
-          <p className="text-sm font-semibold text-[#2B2420]">
-            {isEditing ? "Edit your review" : "Write a review"}
+      {/* Not a verified buyer of this product yet */}
+      {userId && !isEditing && !checkingEligibility && !canReview ? (
+        <div className="mb-10 rounded-lg border border-dashed border-[#E7DCC4] bg-white p-5">
+          <p className="text-sm font-semibold text-[#2B2420]">Write a review</p>
+          <p className="mt-1 text-sm text-neutral-500">
+            Reviews are open to buyers who received this product. You can leave one
+            once your order has been delivered.
           </p>
         </div>
+      ) : (
+        /* Write / edit a review */
+        <div className="mb-10 rounded-lg border border-[#E7DCC4] bg-white p-5">
+          <div className="mb-3 flex items-center gap-2">
+            {isEditing && <Pencil className="h-3.5 w-3.5 text-[#8E3D14]" strokeWidth={2} />}
+            <p className="text-sm font-semibold text-[#2B2420]">
+              {isEditing ? "Edit your review" : "Write a review"}
+            </p>
+          </div>
 
-        <div className="mb-3 flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => setRating(n)}
-              onMouseEnter={() => setHoverRating(n)}
-              onMouseLeave={() => setHoverRating(0)}
-              aria-label={`${n} star`}
-              className="p-0.5"
-            >
-              <Star
-                className="h-6 w-6"
-                strokeWidth={1.5}
-                fill={n <= (hoverRating || rating) ? "#C05620" : "none"}
-                color={n <= (hoverRating || rating) ? "#C05620" : "#C9BB9C"}
-              />
-            </button>
-          ))}
-        </div>
+          <div className="mb-3 flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                onMouseEnter={() => setHoverRating(n)}
+                onMouseLeave={() => setHoverRating(0)}
+                aria-label={`${n} star`}
+                className="p-0.5"
+              >
+                <Star
+                  className="h-6 w-6"
+                  strokeWidth={1.5}
+                  fill={n <= (hoverRating || rating) ? "#C05620" : "none"}
+                  color={n <= (hoverRating || rating) ? "#C05620" : "#C9BB9C"}
+                />
+              </button>
+            ))}
+          </div>
 
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title (optional)"
-          maxLength={120}
-          className="mb-2 w-full rounded-sm border border-[#E7DCC4] px-3 py-2 text-sm text-[#2B2420]"
-        />
-        <textarea
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Share what you liked or didn't (optional)"
-          maxLength={2000}
-          rows={3}
-          className="mb-3 w-full rounded-sm border border-[#E7DCC4] px-3 py-2 text-sm text-[#2B2420]"
-        />
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title (optional)"
+            maxLength={120}
+            className="mb-2 w-full rounded-sm border border-[#E7DCC4] px-3 py-2 text-sm text-[#2B2420]"
+          />
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Share what you liked or didn't (optional)"
+            maxLength={2000}
+            rows={3}
+            className="mb-3 w-full rounded-sm border border-[#E7DCC4] px-3 py-2 text-sm text-[#2B2420]"
+          />
 
-        {userId ? (
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={submitReview}
-              disabled={submitting || deleting}
-              className="rounded-sm bg-[#2B2420] px-5 py-2.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {submitting ? "Saving..." : isEditing ? "Update review" : "Submit review"}
-            </button>
-            {isEditing && (
+          {userId ? (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={deleteReview}
+                onClick={submitReview}
                 disabled={submitting || deleting}
-                className="text-sm font-semibold text-[#8E3D14] underline underline-offset-2 disabled:opacity-40"
+                className="rounded-sm bg-[#2B2420] px-5 py-2.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 disabled:opacity-40"
               >
-                {deleting ? "Deleting..." : "Delete review"}
+                {submitting ? "Saving..." : isEditing ? "Update review" : "Submit review"}
               </button>
-            )}
-          </div>
-        ) : (
-          <Link
-            href="/login"
-            className="inline-block rounded-sm bg-[#2B2420] px-5 py-2.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90"
-          >
-            Sign in to review
-          </Link>
-        )}
-      </div>
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={deleteReview}
+                  disabled={submitting || deleting}
+                  className="text-sm font-semibold text-[#8E3D14] underline underline-offset-2 disabled:opacity-40"
+                >
+                  {deleting ? "Deleting..." : "Delete review"}
+                </button>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="inline-block rounded-sm bg-[#2B2420] px-5 py-2.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90"
+            >
+              Sign in to review
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Review list */}
       {reviews.length === 0 ? (
