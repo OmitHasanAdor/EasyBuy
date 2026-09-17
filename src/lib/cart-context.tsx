@@ -14,6 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { authFetch } from "@/lib/auth-fetch";
 import { API_URL } from "@/config/api";
+import { unitPrice } from "@/lib/pricing";
 
 // Supports product variants in the cart
 export type CartItem = {
@@ -66,8 +67,14 @@ type ServerCartRow = {
   productId: number;
   variantId: number | null;
   quantity: number;
-  product: { name: string; price: number; images: string[] };
-  variant: { size: string | null; color: string | null } | null;
+  product: {
+    name: string;
+    price: number;
+    images: string[];
+    discountPercent: number | null;
+    saleEndsAt: string | null;
+  };
+  variant: { size: string | null; color: string | null; price: number | null } | null;
 };
 
 function serverRowToCartItem(row: ServerCartRow): CartItem {
@@ -76,7 +83,8 @@ function serverRowToCartItem(row: ServerCartRow): CartItem {
     id: row.productId,
     variantId: row.variantId,
     name: row.product?.name ?? "",
-    price: row.product?.price ?? 0,
+    // same unit price the checkout charges (variant override + running sale)
+    price: row.product ? unitPrice(row.product, row.variant?.price) : 0,
     imageUrl: row.product?.images?.[0] ?? "",
     size: row.variant?.size ?? null,
     color: row.variant?.color ?? null,
