@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import Link from "next/link";
 import Image from "next/image";
@@ -44,6 +45,10 @@ const STATUS_STYLES: Record<string, string> = {
   SHIPPED: "bg-indigo-100 text-indigo-800",
   DELIVERED: "bg-emerald-100 text-emerald-800",
   CANCELLED: "bg-red-100 text-red-800",
+};
+
+export const metadata: Metadata = {
+  title: "Overview",
 };
 
 export default async function BuyerDashboard() {

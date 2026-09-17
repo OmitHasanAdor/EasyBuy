@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { serverApiFetch } from "@/lib/server-api";
 import OrdersClient from "./OrdersClient";
@@ -36,6 +37,10 @@ export type Order = {
   createdAt: string;
   updatedAt: string;
   items: OrderItem[];
+};
+
+export const metadata: Metadata = {
+  title: "My Orders",
 };
 
 // Server Component: no try/catch here, a failed request goes to error.tsx

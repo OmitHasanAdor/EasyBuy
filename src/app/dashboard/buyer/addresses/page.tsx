@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { serverApiFetch } from "@/lib/server-api";
 import { AddressesClient } from "./AddressesClient";
@@ -25,6 +26,10 @@ async function getAddresses(): Promise<Address[]> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Saved Addresses",
+};
 
 export default async function BuyerAddressesPage() {
   await requireRole("buyer");

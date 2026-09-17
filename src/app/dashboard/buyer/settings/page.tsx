@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+
+export const metadata: Metadata = {
+  title: "Profile Settings",
+};
 
 export default async function ProfileSettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
