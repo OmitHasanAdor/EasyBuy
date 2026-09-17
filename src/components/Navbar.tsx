@@ -9,6 +9,7 @@ import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist";
+import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -16,49 +17,45 @@ export default function Navbar() {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const router = useRouter();
-
   const { totalCount } = useCart();
   const { count: wishlistCount } = useWishlist();
 
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
+  const userEmail = session?.user?.email ?? null;
+  const userId = session?.user?.id ?? null;
+
   // Get current user's role
   useEffect(() => {
-    const fetchUserRole = async () => {
+    if (sessionLoading) return;
+
+    if (!userEmail || !userId) {
+      setUserRole(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
       try {
-        const sessionResponse = await fetch("/api/auth/get-session");
-
-        if (!sessionResponse.ok) {
-          setUserRole(null);
-          return;
-        }
-
-        const session = await sessionResponse.json();
-
-        if (!session?.user?.email) {
-          setUserRole(null);
-          return;
-        }
-
         const response = await fetch(
-          `${API_URL}/user-role?email=${encodeURIComponent(
-            session.user.email
-          )}`
+          `${API_URL}/user-role?email=${encodeURIComponent(userEmail)}`
         );
-
         if (!response.ok) {
-          setUserRole(null);
+          if (!cancelled) setUserRole(null);
           return;
         }
-
         const data = await response.json();
-        setUserRole(data.role);
+        if (!cancelled) setUserRole(data.role ?? "buyer");
       } catch (error) {
         console.error("Failed to fetch user role:", error);
-        setUserRole(null);
+        if (!cancelled) setUserRole(null);
       }
-    };
+    })();
 
-    fetchUserRole();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [userEmail, userId, sessionLoading]);
 
   // Shared cache for category queries
   const { data: categories = [] } = useQuery<string[]>({
@@ -84,7 +81,14 @@ export default function Navbar() {
         ? "/dashboard/seller/profile"
         : userRole === "admin"
           ? "/dashboard/admin/profile"
-          : "/login";
+          : "/post-auth";
+
+  const loggedIn = Boolean(userId);
+  const finalProfileHref = !loggedIn
+    ? "/login"
+    : userRole
+      ? profileHref
+      : "/post-auth";
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,7 +202,7 @@ export default function Navbar() {
 
           {/* Profile */}
           <Link
-            href={profileHref}
+            href={finalProfileHref}
             className="ml-1 hidden items-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 sm:flex"
           >
             <User className="h-4 w-4" strokeWidth={2} />
@@ -286,7 +290,7 @@ export default function Navbar() {
 
             {/* Profile */}
             <Link
-              href={profileHref}
+              href={finalProfileHref}
               onClick={() => setMobileOpen(false)}
               className="mt-2 flex items-center justify-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2.5 text-sm font-semibold text-[#F7F2E7]"
             >
