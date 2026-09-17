@@ -9,6 +9,8 @@ import { OrderStatusSelect } from "./OrderStatusSelect";
 type Order = {
   id: number;
   status: string;
+  paymentMethod: string | null;
+  paymentStatus: string;
   total: number;
   createdAt: string;
   user: { id: string; name: string; email: string };
@@ -107,6 +109,24 @@ export default async function AdminOrdersPage({
                     {order.user.name} · {order.user.email} ·{" "}
                     {new Date(order.createdAt).toLocaleString()}
                   </p>
+                  {order.paymentMethod && (
+                    <p className="mt-1 text-xs">
+                      <span className="text-[#8E3D14]/70">
+                        {order.paymentMethod === "COD" ? "Cash on delivery" : "Online payment"} ·{" "}
+                      </span>
+                      <span
+                        className={`font-semibold ${
+                          order.paymentStatus === "PAID"
+                            ? "text-green-700"
+                            : order.paymentStatus === "FAILED"
+                            ? "text-red-700"
+                            : "text-amber-700"
+                        }`}
+                      >
+                        {order.paymentStatus}
+                      </span>
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <OrderStatusSelect orderId={order.id} status={order.status} />
