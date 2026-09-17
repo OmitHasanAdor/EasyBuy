@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   HelpCircle,
@@ -8,6 +9,12 @@ import {
   MessageSquareText,
   ChevronDown,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Help Center",
+  description:
+    "Answers to common questions about buying, selling, orders, payments and your EasyBuy account.",
+};
 
 const FAQ_GROUPS = [
   {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +8,11 @@ import BecomeSellerSection from "@/components/profile/BecomeSellerSection";
 import AdminSellerRequests from "@/components/profile/AdminSellerRequests";
 import AdminUsersList from "@/components/profile/AdminUsersList";
 import { User, Mail, Shield, Phone, Calendar, CheckCircle2 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "My Profile",
+  robots: { index: false },
+};
 
 export default async function ProfilePage() {
     const session = await auth.api.getSession({ headers: await headers() });
