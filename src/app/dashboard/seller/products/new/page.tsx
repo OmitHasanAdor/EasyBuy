@@ -1,9 +1,14 @@
+import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { requireRole } from "@/lib/session"
 import AddProductForm from "./AddProductForm"
 
+
+export const metadata: Metadata = {
+  title: "Add New Product",
+}
 
 export default async function AddNewProductPage() {
   await requireRole("seller")

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +11,10 @@ import {
   Store,
 } from "lucide-react";
 import { headers } from "next/headers";
+
+export const metadata: Metadata = {
+  title: "Seller Profile",
+};
 
 export default async function SellerProfilePage() {
   const session = await auth.api.getSession({

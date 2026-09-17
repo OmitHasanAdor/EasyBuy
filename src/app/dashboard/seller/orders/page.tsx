@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -57,6 +58,10 @@ const STATUS_FILTERS = [
   { label: "Delivered", value: "DELIVERED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
+
+export const metadata: Metadata = {
+  title: "Orders & Invoices",
+};
 
 export default async function SellerOrdersPage({
   searchParams,

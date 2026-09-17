@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers"
 import { requireRole } from "@/lib/session"
@@ -100,6 +101,10 @@ function getStatusClass(status: string) {
       return "bg-gray-100 text-gray-700"
   }
 }
+
+export const metadata: Metadata = {
+  title: "Overview",
+};
 
 export default async function SellerOverviewPage() {
   await requireRole("seller")

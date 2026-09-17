@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -44,6 +45,10 @@ async function getSellerProducts(): Promise<Product[]> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "My Products",
+};
 
 export default async function SellerProductsPage() {
   await requireRole("seller");

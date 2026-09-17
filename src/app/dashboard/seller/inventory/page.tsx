@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { API_URL } from "@/config/api";
 import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
@@ -46,6 +47,10 @@ async function getInventory(): Promise<InventoryProduct[]> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Inventory",
+};
 
 export default async function SellerInventoryPage() {
   await requireRole("seller");
