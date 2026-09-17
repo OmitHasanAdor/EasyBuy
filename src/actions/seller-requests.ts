@@ -177,3 +177,49 @@ export async function rejectSellerRequest(requestId: string, adminNote?: string)
     revalidateSellerPages();
     return { success: true };
 }
+
+/**
+ * Admin action to take seller rights away after a request was approved.
+ * Marks the request REVOKED and turns the user back into a buyer in the
+ * same transaction, so the request and the role can't disagree (EB-13).
+ */
+export async function revokeSellerRequest(requestId: string, adminNote?: string) {
+    const admin = await requireAdminUser();
+    if (!admin) {
+        return { error: "Unauthorized: Only administrators can revoke seller access." };
+    }
+
+    const sellerReq = await prisma.sellerRequest.findUnique({
+        where: { id: requestId },
+    });
+
+    if (!sellerReq) {
+        return { error: "Seller request not found." };
+    }
+
+    if (sellerReq.status !== "APPROVED") {
+        return { error: "Only approved seller requests can be revoked." };
+    }
+
+    const revoked = await prisma.$transaction(async (tx) => {
+        const updated = await tx.sellerRequest.updateMany({
+            where: { id: requestId, status: "APPROVED" },
+            data: { status: "REVOKED", adminNote: adminNote?.trim() || null },
+        });
+        if (updated.count === 0) return false;
+
+        // never demote an admin by accident
+        await tx.user.updateMany({
+            where: { id: sellerReq.userId, role: "seller" },
+            data: { role: "buyer" },
+        });
+        return true;
+    });
+
+    if (!revoked) {
+        return { error: "This request was already handled by another admin." };
+    }
+
+    revalidateSellerPages();
+    return { success: true };
+}

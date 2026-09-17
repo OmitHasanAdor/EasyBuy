@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { approveSellerRequest, rejectSellerRequest } from "@/actions/seller-requests";
-import { Check, X, ShieldCheck, Clock, Store, Mail, Phone, FileText, AlertCircle } from "lucide-react";
+import {
+    approveSellerRequest,
+    rejectSellerRequest,
+    revokeSellerRequest,
+} from "@/actions/seller-requests";
+import { Check, X, ShieldCheck, Clock, Store, Mail, Phone, FileText, AlertCircle, UserX } from "lucide-react";
 
 export interface SellerRequestItem {
     id: string;
@@ -30,6 +34,8 @@ export default function AdminSellerRequests({ requests: initialRequests }: Props
     const [activeTab, setActiveTab] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING");
     const [rejectingId, setRejectingId] = useState<string | null>(null);
     const [rejectNote, setRejectNote] = useState("");
+    const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [revokeNote, setRevokeNote] = useState("");
     const [actionError, setActionError] = useState("");
     const [isPending, startTransition] = useTransition();
     const [processingId, setProcessingId] = useState<string | null>(null);
@@ -85,6 +91,37 @@ export default function AdminSellerRequests({ requests: initialRequests }: Props
                 prev.map((r) =>
                     r.id === requestId
                         ? { ...r, status: "REJECTED", adminNote: rejectNote || null }
+                        : r
+                )
+            );
+        });
+    }
+
+    // Takes seller rights away from an approved seller (role goes back to buyer)
+    function handleRevoke(requestId: string) {
+        setActionError("");
+        setProcessingId(requestId);
+
+        startTransition(async () => {
+            const res = await revokeSellerRequest(requestId, revokeNote);
+            setProcessingId(null);
+            setRevokingId(null);
+            setRevokeNote("");
+
+            if (res.error) {
+                setActionError(res.error);
+                return;
+            }
+
+            setRequests((prev) =>
+                prev.map((r) =>
+                    r.id === requestId
+                        ? {
+                              ...r,
+                              status: "REVOKED",
+                              adminNote: revokeNote || null,
+                              user: { ...r.user, role: r.user.role === "seller" ? "buyer" : r.user.role },
+                          }
                         : r
                 )
             );
@@ -208,6 +245,11 @@ export default function AdminSellerRequests({ requests: initialRequests }: Props
                                                     Rejected
                                                 </span>
                                             )}
+                                            {req.status === "REVOKED" && (
+                                                <span className="bg-gray-200 text-gray-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
+                                                    Revoked
+                                                </span>
+                                            )}
                                         </div>
 
                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
@@ -274,7 +316,57 @@ export default function AdminSellerRequests({ requests: initialRequests }: Props
                                             </button>
                                         </div>
                                     )}
+
+                                    {req.status === "APPROVED" && (
+                                        <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                                            <button
+                                                type="button"
+                                                disabled={isProcessing}
+                                                onClick={() => {
+                                                    setRevokingId(revokingId === req.id ? null : req.id);
+                                                    setRevokeNote("");
+                                                }}
+                                                className="inline-flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition-all disabled:opacity-50"
+                                            >
+                                                <UserX className="w-3.5 h-3.5" />
+                                                Revoke seller access
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
+
+                                {/* Revoke Form */}
+                                {revokingId === req.id && (
+                                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                                        <label className="block text-xs font-semibold text-gray-700">
+                                            Reason (optional). The user becomes a buyer again:
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Repeated policy violations"
+                                                value={revokeNote}
+                                                onChange={(e) => setRevokeNote(e.target.value)}
+                                                className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500/20 focus:border-gray-500"
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={isProcessing}
+                                                onClick={() => handleRevoke(req.id)}
+                                                className="bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                Confirm Revoke
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setRevokingId(null)}
+                                                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-2"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Rejection Feedback Form */}
                                 {isRejectOpen && (
