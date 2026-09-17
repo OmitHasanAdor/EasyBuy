@@ -31,6 +31,8 @@ export type Order = {
   userId: string;
   total: number;
   status: string;
+  paymentMethod: string | null;
+  paymentStatus: string;
   createdAt: string;
   updatedAt: string;
   items: OrderItem[];

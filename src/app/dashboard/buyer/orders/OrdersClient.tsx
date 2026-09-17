@@ -2,8 +2,19 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronUp, Loader2, Package } from "lucide-react";
+import { toast } from "sonner";
+import { API_URL } from "@/config/api";
+import { authFetch } from "@/lib/auth-fetch";
 import type { Order } from "./page";
+
+const CANCEL_ERROR = "Couldn't cancel the order. Please try again.";
+
+// Buyers can cancel while the order is pending and not paid online yet
+function canCancel(order: Order) {
+    return order.status === "PENDING" && order.paymentStatus !== "PAID";
+}
 
 type OrdersClientProps = {
     orders: Order[];
@@ -23,6 +34,29 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
     const [mounted, setMounted] = useState(false);
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
+    const [cancellingId, setCancellingId] = useState<number | null>(null);
+    const router = useRouter();
+
+    async function cancelOrder(orderId: number) {
+        if (!confirm(`Cancel order #${orderId}?`)) return;
+        setCancellingId(orderId);
+        try {
+            const res = await authFetch(`${API_URL}/api/orders/${orderId}/cancel`, {
+                method: "POST",
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                toast.error(data.error || CANCEL_ERROR);
+                return;
+            }
+            toast.success(`Order #${orderId} was cancelled`);
+            router.refresh();
+        } catch {
+            toast.error(CANCEL_ERROR);
+        } finally {
+            setCancellingId(null);
+        }
+    }
 
     useEffect(() => {
         setMounted(true);
@@ -209,6 +243,22 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                                 ৳{order.total.toLocaleString()}
                                             </span>
                                         </div>
+
+                                        {canCancel(order) && (
+                                            <div className="mt-3 flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => cancelOrder(order.id)}
+                                                    disabled={cancellingId === order.id}
+                                                    className="inline-flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                                                >
+                                                    {cancellingId === order.id && (
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    )}
+                                                    Cancel order
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
