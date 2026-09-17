@@ -48,15 +48,44 @@ type DashboardData = {
 }
 
 async function getSellerDashboard(): Promise<DashboardData | null> {
-  const res = await serverApiFetch("/api/seller/dashboard")
-  if (!res) return null
+  try {
+    const res = await serverApiFetch("/api/seller/dashboard")
+console.log("dashboard res", res?.status, res && (await res.clone().text()).slice(0, 200))
+    if (!res) return null
 
-  if (!res.ok) {
-    console.error("Failed to fetch seller dashboard:", await res.text())
+    if (!res.ok) {
+      console.error("Failed to fetch seller dashboard:", await res.text())
+      return null
+    }
+
+    const json = await res.json()
+
+    // normalize if backend wraps payload
+    const payload = json?.summary ? json : json?.data
+
+    if (!payload?.summary) {
+      console.error("Unexpected dashboard payload:", json)
+      return null
+    }
+
+    return {
+      summary: {
+        totalProducts: Number(payload.summary.totalProducts ?? 0),
+        totalOrders: Number(payload.summary.totalOrders ?? 0),
+        totalRevenue: Number(payload.summary.totalRevenue ?? 0),
+        lowStockCount: Number(payload.summary.lowStockCount ?? 0),
+      },
+      recentProducts: Array.isArray(payload.recentProducts)
+        ? payload.recentProducts
+        : [],
+      recentOrders: Array.isArray(payload.recentOrders)
+        ? payload.recentOrders
+        : [],
+    }
+  } catch (err) {
+    console.error("Seller dashboard error:", err)
     return null
   }
-
-  return res.json()
 }
 
 function formatDate(date: string) {
@@ -86,6 +115,8 @@ function getStatusClass(status: string) {
 export const metadata: Metadata = {
   title: "Overview",
 };
+
+
 
 export default async function SellerOverviewPage() {
   await requireRole("seller")
@@ -171,7 +202,7 @@ export default async function SellerOverviewPage() {
             <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
               <h2 className="mt-2 text-2xl font-bold">
-                ৳{summary.totalRevenue.toLocaleString()}
+                ৳{(summary.totalRevenue ?? 0).toLocaleString()}
               </h2>
             </div>
 
@@ -258,11 +289,10 @@ export default async function SellerOverviewPage() {
                     </p>
 
                     <p
-                      className={`mt-1 text-sm ${
-                        product.stock < 5
+                      className={`mt-1 text-sm ${product.stock < 5
                           ? "text-orange-600"
                           : "text-gray-500"
-                      }`}
+                        }`}
                     >
                       Stock: {product.stock}
                     </p>
