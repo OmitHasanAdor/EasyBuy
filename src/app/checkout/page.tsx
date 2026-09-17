@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ type Address = {
 
 export default function CheckoutPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const { items, totalCount } = useCart();
     const { data: session, isPending: sessionLoading } = authClient.useSession();
     const [paymentMethod, setPaymentMethod] = useState<"COD" | "SSLCOMMERZ">("COD");
@@ -100,7 +102,9 @@ export default function CheckoutPage() {
                 return;
             }
 
-            // COD
+            // COD: the server already emptied these items from the cart,
+            // so drop the cached cart or the navbar keeps showing them
+            await queryClient.invalidateQueries({ queryKey: ["cart"] });
             toast.success(data.message || "Order placed successfully");
             router.push(`/checkout/success?orderId=${data.orderId}`);
         } catch {
