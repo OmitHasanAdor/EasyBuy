@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ShieldCheck, Users } from "lucide-react";
 import FadeInView from "@/components/FadeInView";
 
@@ -7,7 +8,7 @@ const points = [
     icon: ShieldCheck,
     title: "Built on trust",
     description:
-      "Every payment is held safely until you confirm your order arrived as expected. No surprises.",
+      "Pay cash on delivery, or online through SSLCommerz. Card and mobile banking details are entered on SSLCommerz's secure page, never on ours.",
   },
   {
     icon: Users,
@@ -30,12 +31,12 @@ export default function WhatIsEasyBuy() {
           <h2 className="font-serif text-4xl font-medium text-[#2B2420] sm:text-[44px]">
             What is EasyBuy?
           </h2>
-          <a
-            href="#"
+          <Link
+            href="/about"
             className="mt-4 inline-block text-sm font-medium text-[#8E3D14] underline decoration-dotted underline-offset-4 transition-colors hover:text-[#C05620]"
           >
             Read our story
-          </a>
+          </Link>
         </FadeInView>
 
         {/* ── Cards ── */}
@@ -78,8 +79,8 @@ export default function WhatIsEasyBuy() {
               Shop with confidence
             </h3>
             <p className="mt-3 text-[14.5px] leading-relaxed text-[#5B5145]">
-              AI-backed checks flag suspicious listings before they reach you,
-              so every purchase feels safe from the start.
+              Every seller is reviewed by our team before their shop goes live,
+              and only real buyers can leave reviews.
             </p>
           </FadeInView>
         </div>
@@ -93,12 +94,12 @@ export default function WhatIsEasyBuy() {
           <p className="font-serif text-lg font-medium text-[#2B2420]">
             Have a question? We&apos;ve got answers.
           </p>
-          <a
-            href="#"
+          <Link
+            href="/help"
             className="inline-flex items-center rounded-full border border-[#2B2420] px-6 py-2.5 text-sm font-semibold text-[#2B2420] transition-all duration-300 hover:bg-[#2B2420] hover:text-[#F7F2E7]"
           >
             Go to Help Center
-          </a>
+          </Link>
         </FadeInView>
 
       </div>

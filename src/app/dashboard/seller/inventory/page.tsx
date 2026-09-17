@@ -1,6 +1,6 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Boxes, AlertTriangle } from "lucide-react";
 import { StockEditor } from "./StockEditor";
 
@@ -24,19 +24,8 @@ type InventoryProduct = {
 };
 
 async function getInventory(): Promise<InventoryProduct[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as any).session?.token as string | undefined;
-  if (!token) return [];
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/inventory`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/seller/inventory");
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch inventory:", await res.text());
@@ -45,6 +34,10 @@ async function getInventory(): Promise<InventoryProduct[]> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Inventory",
+};
 
 export default async function SellerInventoryPage() {
   await requireRole("seller");

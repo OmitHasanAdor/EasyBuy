@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import {
   Users,
   Store,
@@ -38,19 +38,8 @@ type DashboardData = {
 };
 
 async function getDashboard(): Promise<DashboardData | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
-
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return null;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/admin/dashboard");
+  if (!res) return null;
 
   if (!res.ok) {
     console.error("Admin dashboard failed:", await res.text());
@@ -59,6 +48,10 @@ async function getDashboard(): Promise<DashboardData | null> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Overview",
+};
 
 export default async function AdminDashboardPage() {
   const user = await requireRole("admin");

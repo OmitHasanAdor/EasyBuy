@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import SignOutButton from "@/components/SignOutButton";
 import AdminSellerRequests from "@/components/profile/AdminSellerRequests";
@@ -11,6 +12,10 @@ import {
   Calendar,
   CheckCircle2,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Admin Profile",
+};
 
 export default async function AdminProfilePage() {
   const user = await requireRole("admin");

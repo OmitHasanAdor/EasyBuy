@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { Wallet } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Payments & Transactions",
+};
 
 export default async function AdminPaymentsPage() {
   await requireRole("admin");

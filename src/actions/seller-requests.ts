@@ -6,6 +6,30 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 /**
+ * Checks that the caller is an admin, using the role stored in the database.
+ * The session's own copy of the role can be several minutes old because of
+ * Better-Auth's cookie cache.
+ */
+async function requireAdminUser() {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) return null;
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, role: true, status: true, banned: true },
+    });
+    if (!user || user.role !== "admin" || user.status !== "active" || user.banned) {
+        return null;
+    }
+    return user;
+}
+
+function revalidateSellerPages() {
+    revalidatePath("/profile");
+    revalidatePath("/dashboard/admin/profile");
+}
+
+/**
  * Submit a request to become a seller.
  */
 export async function submitSellerRequest(data: {
@@ -72,10 +96,11 @@ export async function submitSellerRequest(data: {
 
 /**
  * Admin action to approve a seller request.
+ * Only PENDING requests can be approved (EB-13).
  */
 export async function approveSellerRequest(requestId: string) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user || session.user.role !== "admin") {
+    const admin = await requireAdminUser();
+    if (!admin) {
         return { error: "Unauthorized: Only administrators can approve seller requests." };
     }
 
@@ -87,34 +112,41 @@ export async function approveSellerRequest(requestId: string) {
         return { error: "Seller request not found." };
     }
 
-    if (sellerReq.status === "APPROVED") {
-        return { error: "This seller request has already been approved." };
+    if (sellerReq.status !== "PENDING") {
+        return { error: `This request was already ${sellerReq.status.toLowerCase()}.` };
     }
 
-    await prisma.$transaction([
-        prisma.sellerRequest.update({
-            where: { id: requestId },
-            data: {
-                status: "APPROVED",
-                adminNote: null,
-            },
-        }),
-        prisma.user.update({
+    const approved = await prisma.$transaction(async (tx) => {
+        // conditional update: two admins clicking at once can't both act on it
+        const updated = await tx.sellerRequest.updateMany({
+            where: { id: requestId, status: "PENDING" },
+            data: { status: "APPROVED", adminNote: null },
+        });
+        if (updated.count === 0) return false;
+
+        await tx.user.update({
             where: { id: sellerReq.userId },
             data: { role: "seller" },
-        }),
-    ]);
+        });
+        return true;
+    });
 
-    revalidatePath("/profile");
+    if (!approved) {
+        return { error: "This request was already handled by another admin." };
+    }
+
+    revalidateSellerPages();
     return { success: true };
 }
 
 /**
  * Admin action to reject a seller request.
+ * Only PENDING requests can be rejected; an approved seller is removed with
+ * revokeSellerRequest instead, which also takes the seller role away (EB-13).
  */
 export async function rejectSellerRequest(requestId: string, adminNote?: string) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user || session.user.role !== "admin") {
+    const admin = await requireAdminUser();
+    if (!admin) {
         return { error: "Unauthorized: Only administrators can reject seller requests." };
     }
 
@@ -126,14 +158,68 @@ export async function rejectSellerRequest(requestId: string, adminNote?: string)
         return { error: "Seller request not found." };
     }
 
-    await prisma.sellerRequest.update({
-        where: { id: requestId },
+    if (sellerReq.status !== "PENDING") {
+        return { error: `This request was already ${sellerReq.status.toLowerCase()}.` };
+    }
+
+    const updated = await prisma.sellerRequest.updateMany({
+        where: { id: requestId, status: "PENDING" },
         data: {
             status: "REJECTED",
             adminNote: adminNote?.trim() || null,
         },
     });
 
-    revalidatePath("/profile");
+    if (updated.count === 0) {
+        return { error: "This request was already handled by another admin." };
+    }
+
+    revalidateSellerPages();
+    return { success: true };
+}
+
+/**
+ * Admin action to take seller rights away after a request was approved.
+ * Marks the request REVOKED and turns the user back into a buyer in the
+ * same transaction, so the request and the role can't disagree (EB-13).
+ */
+export async function revokeSellerRequest(requestId: string, adminNote?: string) {
+    const admin = await requireAdminUser();
+    if (!admin) {
+        return { error: "Unauthorized: Only administrators can revoke seller access." };
+    }
+
+    const sellerReq = await prisma.sellerRequest.findUnique({
+        where: { id: requestId },
+    });
+
+    if (!sellerReq) {
+        return { error: "Seller request not found." };
+    }
+
+    if (sellerReq.status !== "APPROVED") {
+        return { error: "Only approved seller requests can be revoked." };
+    }
+
+    const revoked = await prisma.$transaction(async (tx) => {
+        const updated = await tx.sellerRequest.updateMany({
+            where: { id: requestId, status: "APPROVED" },
+            data: { status: "REVOKED", adminNote: adminNote?.trim() || null },
+        });
+        if (updated.count === 0) return false;
+
+        // never demote an admin by accident
+        await tx.user.updateMany({
+            where: { id: sellerReq.userId, role: "seller" },
+            data: { role: "buyer" },
+        });
+        return true;
+    });
+
+    if (!revoked) {
+        return { error: "This request was already handled by another admin." };
+    }
+
+    revalidateSellerPages();
     return { success: true };
 }

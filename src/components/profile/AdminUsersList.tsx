@@ -28,7 +28,6 @@ export default function AdminUsersList({ users }: Props) {
 
     const buyers = users.filter((u) => u.role === "buyer");
     const sellers = users.filter((u) => u.role === "seller");
-    const admins = users.filter((u) => u.role === "admin");
 
     const filteredUsers = users.filter((u) => {
         if (filterRole !== "ALL" && u.role !== filterRole) {

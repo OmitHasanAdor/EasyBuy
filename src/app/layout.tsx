@@ -22,9 +22,25 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://easy-buy-ruddy.vercel.app";
+const SITE_DESCRIPTION =
+  "EasyBuy is your one-stop marketplace for men's and women's fashion, offering curated sellers, fair prices, and fast delivery across Bangladesh.";
+
 export const metadata: Metadata = {
-  title: "EasyBuy - Your One-Stop Marketplace",
-  description: "EasyBuy is your one-stop marketplace for men's and women's fashion, offering curated sellers, fair prices, and fast delivery across Bangladesh.",
+  metadataBase: new URL(SITE_URL),
+  // Pages set their own title and get " | EasyBuy" appended (EB-17)
+  title: {
+    template: "%s | EasyBuy",
+    default: "EasyBuy - Your One-Stop Marketplace",
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "EasyBuy",
+    locale: "en_BD",
+    title: "EasyBuy - Your One-Stop Marketplace",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -1,6 +1,6 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Store } from "lucide-react";
 import { SellerActions } from "./SellerActions";
 
@@ -16,18 +16,14 @@ type Seller = {
 };
 
 async function getSellers(): Promise<Seller[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/sellers`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/admin/sellers");
+  if (!res || !res.ok) return [];
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Seller Management",
+};
 
 export default async function AdminSellersPage() {
   await requireRole("admin");

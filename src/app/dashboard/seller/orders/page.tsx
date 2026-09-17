@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { ClipboardList } from "lucide-react";
 
 type OrderItem = {
@@ -27,19 +27,9 @@ type SellerOrder = {
 };
 
 async function getSellerOrders(status?: string): Promise<SellerOrder[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as any).session?.token as string | undefined;
-  if (!token) return [];
-
-  const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/seller/orders`);
-  if (status) url.searchParams.set("status", status);
-
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const res = await serverApiFetch(`/api/seller/orders${query}`);
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch seller orders:", await res.text());
@@ -56,6 +46,10 @@ const STATUS_FILTERS = [
   { label: "Delivered", value: "DELIVERED" },
   { label: "Cancelled", value: "CANCELLED" },
 ];
+
+export const metadata: Metadata = {
+  title: "Orders & Invoices",
+};
 
 export default async function SellerOrdersPage({
   searchParams,

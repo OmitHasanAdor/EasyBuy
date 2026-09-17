@@ -1,6 +1,6 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Star } from "lucide-react";
 
 type Review = {
@@ -21,19 +21,8 @@ type Review = {
 };
 
 async function getSellerReviews(): Promise<Review[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/reviews`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/seller/reviews");
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch seller reviews:", await res.text());
@@ -42,6 +31,10 @@ async function getSellerReviews(): Promise<Review[]> {
 
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Customer Reviews",
+};
 
 export default async function SellerReviewsPage() {
   await requireRole("seller");

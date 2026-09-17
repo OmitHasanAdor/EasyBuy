@@ -1,7 +1,7 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Tags, Package, Plus } from "lucide-react";
 
 type Product = {
@@ -22,19 +22,8 @@ type CategoryRow = {
 };
 
 async function getSellerProducts(): Promise<Product[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as any).session?.token as string | undefined;
-  if (!token) return [];
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/seller/products`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/seller/products");
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch products for categories:", await res.text());
@@ -78,6 +67,10 @@ function groupByCategory(products: Product[]): CategoryRow[] {
     a.name.localeCompare(b.name)
   );
 }
+
+export const metadata: Metadata = {
+  title: "Categories",
+};
 
 export default async function SellerCategoriesPage() {
   await requireRole("seller");

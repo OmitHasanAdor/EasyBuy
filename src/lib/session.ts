@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { BLOCKED_ACCOUNT_MESSAGE, isAccountBlocked } from "@/lib/account";
 import type { Role } from "@/components/Sidebar";
 
 export type SessionUser = {
@@ -33,6 +34,12 @@ export async function requireRole(requiredRole: Role): Promise<SessionUser> {
 
   if (!dbUser) {
     redirect("/login");
+  }
+
+  // Banned or deactivated users keep a valid cookie until it expires, so
+  // check the account itself on every protected page (EB-04).
+  if (isAccountBlocked(dbUser)) {
+    redirect(`/login?error=${encodeURIComponent(BLOCKED_ACCOUNT_MESSAGE)}`);
   }
 
   const role = (dbUser.role || "buyer") as Role;

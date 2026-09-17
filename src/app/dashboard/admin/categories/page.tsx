@@ -1,6 +1,6 @@
-import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Tags } from "lucide-react";
 
 type CategoryRow = {
@@ -10,21 +10,14 @@ type CategoryRow = {
 };
 
 async function getCategories(): Promise<CategoryRow[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/categories`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/admin/categories");
+  if (!res || !res.ok) return [];
   return res.json();
 }
+
+export const metadata: Metadata = {
+  title: "Categories",
+};
 
 export default async function AdminCategoriesPage() {
   await requireRole("admin");

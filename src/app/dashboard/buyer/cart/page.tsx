@@ -82,17 +82,20 @@ export default function BuyerCartPage() {
             <div className="flex flex-col gap-4 lg:col-span-2">
               {items.map((item) => (
                 <div
-                  key={item.id}
+                  key={`${item.id}-${item.variantId ?? "base"}`}
                   className="flex flex-wrap items-center gap-3 rounded-lg border border-[#E7DCC4] bg-white p-4 sm:flex-nowrap sm:gap-4"
                 >
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[#F2EADA]">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
+                    {/* next/image throws on an empty src (products without photos) */}
+                    {item.imageUrl && (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.name}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    )}
                   </div>
 
                   <div className="flex min-w-35 flex-1 flex-col gap-1">
@@ -102,6 +105,12 @@ export default function BuyerCartPage() {
                     >
                       {item.name}
                     </Link>
+
+                    {(item.size || item.color) && (
+                      <span className="text-xs text-neutral-500">
+                        {[item.size, item.color].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
 
                     <span className="text-sm text-neutral-500">
                       ৳{item.price.toLocaleString()} each
@@ -113,7 +122,7 @@ export default function BuyerCartPage() {
                     <div className="flex items-center gap-2 rounded-full border border-[#E7DCC4] px-2 py-1">
                       <button
                         aria-label="Decrease quantity"
-                        onClick={() => updateQty(item.id, item.qty - 1)}
+                        onClick={() => updateQty(item.id, item.qty - 1, item.variantId)}
                         className="flex h-6 w-6 items-center justify-center text-[#2B2420] hover:text-[#C05620]"
                       >
                         <Minus className="h-3.5 w-3.5" strokeWidth={2} />
@@ -125,7 +134,7 @@ export default function BuyerCartPage() {
 
                       <button
                         aria-label="Increase quantity"
-                        onClick={() => updateQty(item.id, item.qty + 1)}
+                        onClick={() => updateQty(item.id, item.qty + 1, item.variantId)}
                         className="flex h-6 w-6 items-center justify-center text-[#2B2420] hover:text-[#C05620]"
                       >
                         <Plus className="h-3.5 w-3.5" strokeWidth={2} />
@@ -141,7 +150,7 @@ export default function BuyerCartPage() {
                     <button
                       aria-label="Remove item"
                       onClick={() => {
-                        const success = removeItem(item.id);
+                        const success = removeItem(item.id, item.variantId);
 
                         if (success) {
                           toast.success(

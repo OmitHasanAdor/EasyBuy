@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { Bell, Package, ShoppingCart, Star, Wallet } from "lucide-react";
 
@@ -22,6 +23,10 @@ const TYPE_ICON = {
   stock: Package,
   payout: Wallet,
   system: Bell,
+};
+
+export const metadata: Metadata = {
+  title: "Notifications",
 };
 
 export default async function SellerNotificationsPage() {

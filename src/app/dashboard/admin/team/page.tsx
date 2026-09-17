@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import { UserCog } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Team & Roles",
+};
 
 export default async function AdminTeamPage() {
   await requireRole("admin");

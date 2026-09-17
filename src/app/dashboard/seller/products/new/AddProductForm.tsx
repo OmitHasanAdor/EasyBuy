@@ -1,8 +1,10 @@
 "use client"
 
+import { API_URL } from "@/config/api";
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
+import { MAX_DISCOUNT_PERCENT } from "@/lib/pricing"
 
 type Variant = {
   size: string
@@ -29,8 +31,6 @@ export default function AddProductForm({ token }: Props) {
 
   const [discountPercent, setDiscountPercent] = useState("")
   const [saleEndsAt, setSaleEndsAt] = useState("")
-
-  const [isBestSeller, setIsBestSeller] = useState(false)
 
   const [variants, setVariants] = useState<Variant[]>([])
 
@@ -100,6 +100,16 @@ export default function AddProductForm({ token }: Props) {
       return
     }
 
+    if (
+      discountPercent !== "" &&
+      (!Number.isInteger(Number(discountPercent)) ||
+        Number(discountPercent) < 0 ||
+        Number(discountPercent) > MAX_DISCOUNT_PERCENT)
+    ) {
+      setError(`Discount must be a whole number between 0 and ${MAX_DISCOUNT_PERCENT}%`)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -124,8 +134,6 @@ export default function AddProductForm({ token }: Props) {
           ? new Date(saleEndsAt).toISOString()
           : null,
 
-        isBestSeller,
-
         variants: hasVariants
           ? variants.map((variant) => ({
               size: variant.size.trim() || null,
@@ -140,7 +148,7 @@ export default function AddProductForm({ token }: Props) {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/seller/products`,
+        `${API_URL}/api/seller/products`,
         {
           method: "POST",
           headers: {
@@ -462,12 +470,12 @@ export default function AddProductForm({ token }: Props) {
             <input
               type="number"
               min="0"
-              max="100"
+              max={MAX_DISCOUNT_PERCENT}
               value={discountPercent}
               onChange={(e) =>
                 setDiscountPercent(e.target.value)
               }
-              placeholder="0 - 100"
+              placeholder={`0 - ${MAX_DISCOUNT_PERCENT}`}
               className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
             />
           </div>
@@ -487,18 +495,9 @@ export default function AddProductForm({ token }: Props) {
           </div>
         </div>
 
-        <label className="mt-5 flex cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            checked={isBestSeller}
-            onChange={(e) => setIsBestSeller(e.target.checked)}
-            className="h-4 w-4"
-          />
-
-          <span className="text-sm font-medium text-[#2B2420]">
-            Mark as Best Seller
-          </span>
-        </label>
+        <p className="mt-5 text-xs text-[#8E3D14]/60">
+          The Best Seller badge is given by the EasyBuy team based on sales.
+        </p>
       </div>
 
       {/* Error / Success */}

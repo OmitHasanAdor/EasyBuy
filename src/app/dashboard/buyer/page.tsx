@@ -1,11 +1,9 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/session";
 import Link from "next/link";
 import Image from "next/image";
 import { Package, Clock, CheckCircle2, Wallet } from "lucide-react";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://easybuy-server-q1y8.onrender.com";
+import { serverApiFetch } from "@/lib/server-api";
 
 type OrderProduct = {
   id: number;
@@ -13,7 +11,7 @@ type OrderProduct = {
   price: number;
   description: string;
   category: string;
-  imageUrl: string;
+  images: string[];
   stock: number;
   isBestSeller: boolean;
   discountPercent?: number | null;
@@ -49,17 +47,17 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-800",
 };
 
+export const metadata: Metadata = {
+  title: "Overview",
+};
+
 export default async function BuyerDashboard() {
   const user = await requireRole("buyer");
 
-  const response = await fetch(
-    `${API_URL}/api/orders?userId=${user.id}`,
-    {
-      cache: "no-store",
-    }
-  );
+  // The API returns the orders of whoever owns the session token
+  const response = await serverApiFetch("/api/orders");
 
-  if (!response.ok) {
+  if (!response || !response.ok) {
     throw new Error("Failed to fetch orders");
   }
 
@@ -175,9 +173,9 @@ export default async function BuyerDashboard() {
                   }`}
                 >
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F2EADA]">
-                    {firstItem?.product.imageUrl && (
+                    {firstItem?.product.images?.[0] && (
                       <Image
-                        src={firstItem.product.imageUrl}
+                        src={firstItem.product.images[0]}
                         alt={firstItem.product.name}
                         fill
                         className="object-cover"
