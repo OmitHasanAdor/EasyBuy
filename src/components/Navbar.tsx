@@ -10,6 +10,7 @@ import { API_URL } from "@/config/api";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist";
 import { authClient } from "@/lib/auth-client";
+import { authFetch } from "@/lib/auth-fetch";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -21,14 +22,13 @@ export default function Navbar() {
   const { count: wishlistCount } = useWishlist();
 
   const { data: session, isPending: sessionLoading } = authClient.useSession();
-  const userEmail = session?.user?.email ?? null;
   const userId = session?.user?.id ?? null;
 
-  // Get current user's role
+  // Get current user's role from the session (never look users up by email)
   useEffect(() => {
     if (sessionLoading) return;
 
-    if (!userEmail || !userId) {
+    if (!userId) {
       setUserRole(null);
       return;
     }
@@ -37,9 +37,7 @@ export default function Navbar() {
 
     (async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/user-role?email=${encodeURIComponent(userEmail)}`
-        );
+        const response = await authFetch(`${API_URL}/api/me`);
         if (!response.ok) {
           if (!cancelled) setUserRole(null);
           return;
@@ -55,7 +53,7 @@ export default function Navbar() {
     return () => {
       cancelled = true;
     };
-  }, [userEmail, userId, sessionLoading]);
+  }, [userId, sessionLoading]);
 
   // Shared cache for category queries
   const { data: categories = [] } = useQuery<string[]>({
