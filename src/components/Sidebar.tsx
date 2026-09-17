@@ -71,7 +71,7 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
     {
       title: "Support",
       links: [
-        { label: "Messages", href: "/dashboard/buyer/messages", icon: MessageSquareText },
+        // { label: "Messages", href: "/dashboard/buyer/messages", icon: MessageSquareText },
         { label: "Help Center", href: "/help", icon: HelpCircle },
       ],
     },
