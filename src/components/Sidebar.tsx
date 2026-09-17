@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import {
   LayoutDashboard,
   Package,
@@ -155,8 +157,15 @@ export default function Sidebar({
   userName = "Omit Hasan",
   userEmail = "omit@easybuy.com",
 }: SidebarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const groups = NAV_BY_ROLE[role];
+
+  async function handleLogout() {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <aside className="flex h-screen w-72 shrink-0 flex-col border-r border-[#E7DCC4] bg-[#F7F2E7]">
@@ -196,11 +205,10 @@ export default function Sidebar({
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-[#2B2420] text-[#F7F2E7]"
-                          : "text-[#3A342C] hover:bg-[#F0E6D2]"
-                      }`}
+                      className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${isActive
+                        ? "bg-[#2B2420] text-[#F7F2E7]"
+                        : "text-[#3A342C] hover:bg-[#F0E6D2]"
+                        }`}
                     >
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
                       {link.label}
@@ -217,13 +225,14 @@ export default function Sidebar({
 
       {/* Logout */}
       <div className="px-4 py-3">
-        <Link
-          href="/logout"
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-[#C05620] transition-colors hover:bg-[#C05620]/10"
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-[#C05620] transition-colors hover:bg-[#C05620]/10"
         >
           <LogOut className="h-4 w-4" strokeWidth={2} />
           Logout
-        </Link>
+        </button>
       </div>
 
       {/* User profile footer */}
