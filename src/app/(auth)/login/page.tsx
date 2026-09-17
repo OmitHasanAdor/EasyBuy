@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+// import { API_URL } from "@/config/api";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -22,6 +23,8 @@ const item = {
 };
 
 export default function LoginPage() {
+
+  
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,22 +40,43 @@ export default function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    const { error: authError } = await signIn.email({ email, password });
+  const { error: authError } = await signIn.email({ email, password });
+
+  if (authError) {
     setLoading(false);
-
-    if (authError) {
-      setError(authError.message || "Invalid email or password.");
-      return;
-    }
-
-    router.push("/profile");
-    router.refresh();
+    setError(authError.message || "Invalid email or password.");
+    return;
   }
+
+  try {
+    // Role from your existing API (same DB)
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/user-role?email=${encodeURIComponent(email)}`
+    );
+    const data = await res.json().catch(() => ({}));
+    const role = (data.role as string) || "buyer";
+
+    const dest =
+      role === "admin"
+        ? "/dashboard/admin"
+        : role === "seller"
+        ? "/dashboard/seller/profile"
+        : "/dashboard/buyer/profile";
+
+    router.push(dest);
+    router.refresh();
+  } catch {
+    router.push("/dashboard/buyer/profile");
+    router.refresh();
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <motion.div variants={container} initial="hidden" animate="show">
@@ -196,7 +220,7 @@ export default function LoginPage() {
       <motion.div variants={item} className="mb-6">
         <GoogleSignInButton
           text="Sign in with Google"
-          callbackURL="/profile"
+         callbackURL="/post-auth"
           onError={(msg) => setError(msg)}
         />
       </motion.div>

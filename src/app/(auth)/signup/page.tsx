@@ -51,8 +51,8 @@ export default function SignUpPage() {
       return;
     }
 
-    router.push("/profile");
-    router.refresh();
+  router.push("/post-auth");
+router.refresh();
   }
 
   return (
@@ -228,7 +228,7 @@ export default function SignUpPage() {
       <motion.div variants={item} className="mb-6">
         <GoogleSignInButton
           text="Sign up with Google"
-          callbackURL="/profile"
+          callbackURL="/post-auth"
           onError={(msg) => setError(msg)}
         />
       </motion.div>
