@@ -8,7 +8,7 @@ const points = [
     icon: ShieldCheck,
     title: "Built on trust",
     description:
-      "Every payment is held safely until you confirm your order arrived as expected. No surprises.",
+      "Pay cash on delivery, or online through SSLCommerz. Card and mobile banking details are entered on SSLCommerz's secure page, never on ours.",
   },
   {
     icon: Users,
@@ -79,8 +79,8 @@ export default function WhatIsEasyBuy() {
               Shop with confidence
             </h3>
             <p className="mt-3 text-[14.5px] leading-relaxed text-[#5B5145]">
-              AI-backed checks flag suspicious listings before they reach you,
-              so every purchase feels safe from the start.
+              Every seller is reviewed by our team before their shop goes live,
+              and only real buyers can leave reviews.
             </p>
           </FadeInView>
         </div>
