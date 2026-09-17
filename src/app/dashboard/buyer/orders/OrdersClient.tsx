@@ -109,9 +109,9 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                 >
                                     <div className="flex min-w-0 flex-1 items-center gap-4">
                                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F2EADA]">
-                                            {firstItem?.product?.imageUrl && (
+                                            {firstItem?.product?.images?.[0] && (
                                                 <Image
-                                                    src={firstItem.product.imageUrl}
+                                                    src={firstItem.product.images[0]}
                                                     alt={firstItem.product.name}
                                                     fill
                                                     className="object-cover"
@@ -179,9 +179,9 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                                                     className="flex items-center gap-4 rounded-lg bg-[#FAF7F0] p-3"
                                                 >
                                                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-white">
-                                                        {item.product?.imageUrl && (
+                                                        {item.product?.images?.[0] && (
                                                             <Image
-                                                                src={item.product.imageUrl}
+                                                                src={item.product.images[0]}
                                                                 alt={item.product.name}
                                                                 fill
                                                                 className="object-cover"

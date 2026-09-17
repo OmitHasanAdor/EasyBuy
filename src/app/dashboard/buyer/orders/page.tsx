@@ -8,7 +8,7 @@ export type OrderProduct = {
   price: number;
   description: string;
   category: string;
-  imageUrl: string;
+  images: string[];
   stock: number;
   isBestSeller: boolean;
   discountPercent?: number | null;

@@ -10,7 +10,7 @@ type OrderProduct = {
   price: number;
   description: string;
   category: string;
-  imageUrl: string;
+  images: string[];
   stock: number;
   isBestSeller: boolean;
   discountPercent?: number | null;
@@ -168,9 +168,9 @@ export default async function BuyerDashboard() {
                   }`}
                 >
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F2EADA]">
-                    {firstItem?.product.imageUrl && (
+                    {firstItem?.product.images?.[0] && (
                       <Image
-                        src={firstItem.product.imageUrl}
+                        src={firstItem.product.images[0]}
                         alt={firstItem.product.name}
                         fill
                         className="object-cover"
