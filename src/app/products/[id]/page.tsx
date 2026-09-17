@@ -18,6 +18,7 @@ import RelatedProducts from "@/components/RelatedProducts";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist";
 import { trackRecentlyViewed } from "@/lib/recently-viewed";
+import { isDiscountActive, unitPrice } from "@/lib/pricing";
 
 const LOW_STOCK_THRESHOLD = 10;
 const NEW_WINDOW_DAYS = 3;
@@ -90,10 +91,8 @@ export default function ProductDetailPage() {
   const availableStock = hasVariants ? (matchedVariant?.stock ?? 0) : product.stock;
   const basePrice = matchedVariant?.price ?? product.price;
 
-  const hasDiscount = !!product.discountPercent && product.discountPercent > 0;
-  const finalPrice = hasDiscount
-    ? Math.round(basePrice * (1 - product.discountPercent! / 100))
-    : basePrice;
+  const hasDiscount = isDiscountActive(product);
+  const finalPrice = unitPrice(product, matchedVariant?.price);
 
   const daysSinceCreated = product.createdAt
     ? (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24)

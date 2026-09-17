@@ -6,6 +6,7 @@ import { Heart, Star, ImageOff } from "lucide-react";
 import { toast } from "sonner";
 import { useWishlist } from "@/lib/wishlist";
 import MiniCountdown from "@/components/MiniCountdown";
+import { isDiscountActive, unitPrice } from "@/lib/pricing";
 
 export type Product = {
   id: number;
@@ -35,10 +36,9 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
   const { isWishlisted, toggle } = useWishlist();
   const wishlisted = isWishlisted(product.id);
 
-  const hasDiscount = !!product.discountPercent && product.discountPercent > 0;
-  const discountedPrice = hasDiscount
-    ? Math.round(product.price * (1 - product.discountPercent! / 100))
-    : product.price;
+  // expired sales no longer show a discount (the checkout wouldn't apply it)
+  const hasDiscount = isDiscountActive(product);
+  const discountedPrice = unitPrice(product);
 
   // Get the cover image and average rating
   const coverImage = product.images?.[0] || null;
