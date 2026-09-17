@@ -1,7 +1,5 @@
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
-// import { MapPin } from "lucide-react";
+import { serverApiFetch } from "@/lib/server-api";
 import { AddressesClient } from "./AddressesClient";
 
 export type Address = {
@@ -17,16 +15,8 @@ export type Address = {
 };
 
 async function getAddresses(): Promise<Address[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/addresses`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
+  const res = await serverApiFetch("/api/addresses");
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch addresses:", await res.text());
