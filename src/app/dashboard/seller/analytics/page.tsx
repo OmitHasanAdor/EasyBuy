@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { API_URL } from "@/config/api";
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { BarChart3, TrendingUp, ShoppingCart, Package } from "lucide-react";
 
 type OrderItem = {
@@ -27,39 +25,15 @@ type Product = {
   _count?: { orderItems: number };
 };
 
-async function getToken() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
-  return (session as any).session?.token as string | undefined;
-}
-
 async function getOrders(): Promise<SellerOrder[]> {
-  const token = await getToken();
-  if (!token) return [];
-
-  const res = await fetch(
-    `${API_URL}/api/seller/orders`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/seller/orders");
+  if (!res || !res.ok) return [];
   return res.json();
 }
 
 async function getProducts(): Promise<Product[]> {
-  const token = await getToken();
-  if (!token) return [];
-
-  const res = await fetch(
-    `${API_URL}/api/seller/products`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
-  if (!res.ok) return [];
+  const res = await serverApiFetch("/api/seller/products");
+  if (!res || !res.ok) return [];
   return res.json();
 }
 

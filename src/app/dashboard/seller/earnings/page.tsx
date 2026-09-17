@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { API_URL } from "@/config/api";
-import { headers } from "next/headers";
 import { requireRole } from "@/lib/session";
-import { auth } from "@/lib/auth";
+import { serverApiFetch } from "@/lib/server-api";
 import { Wallet, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 
 type OrderItem = {
@@ -22,19 +20,8 @@ type SellerOrder = {
 };
 
 async function getSellerOrders(): Promise<SellerOrder[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return [];
-
-  const token = (session as { session?: { token?: string } })?.session?.token;
-  if (!token) return [];
-
-  const res = await fetch(
-    `${API_URL}/api/seller/orders`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    }
-  );
+  const res = await serverApiFetch("/api/seller/orders");
+  if (!res) return [];
 
   if (!res.ok) {
     console.error("Failed to fetch orders for earnings:", await res.text());
