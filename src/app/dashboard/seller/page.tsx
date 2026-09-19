@@ -23,17 +23,10 @@ type RecentOrder = {
   status: string
   total: number
   createdAt: string
-  user: {
+  customer: {
     name: string
     email: string
   }
-  items: {
-    quantity: number
-    price: number
-    product: {
-      name: string
-    }
-  }[]
 }
 
 type DashboardData = {
@@ -335,9 +328,9 @@ export default async function SellerOverviewPage() {
                         Order #{order.id}
                       </h3>
 
-                      <p className="mt-1 text-sm text-gray-500">
-                        {order.user.name}
-                      </p>
+                   <p className="mt-1 text-sm text-gray-500">
+  {order.customer?.name ?? "Customer"}
+</p>
 
                       <p className="text-xs text-gray-400">
                         {formatDate(order.createdAt)}
@@ -353,16 +346,11 @@ export default async function SellerOverviewPage() {
                     </span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
-                      {order.items.length} item
-                      {order.items.length !== 1 ? "s" : ""}
-                    </p>
-
-                    <p className="font-semibold">
-                      ৳{order.total.toLocaleString()}
-                    </p>
-                  </div>
+              <div className="mt-3 flex items-center justify-end">
+  <p className="font-semibold">
+    ৳{(order.total ?? 0).toLocaleString()}
+  </p>
+</div>
                 </div>
               ))
             )}
