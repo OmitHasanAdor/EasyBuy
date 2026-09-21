@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, ShoppingCart, ChevronRight, Minus, Plus } from "lucide-react";
+import { Heart, ShoppingCart, ChevronRight, Minus, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -18,6 +18,18 @@ import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist";
 import { trackRecentlyViewed } from "@/lib/recently-viewed";
 import { isDiscountActive, unitPrice } from "@/lib/pricing";
+import TrialRoomModal from "@/components/trial-room/TrialRoomModal";
+
+function isApparelProduct(product: { name: string; category?: string }): boolean {
+  const text = `${product.name} ${product.category || ""}`.toLowerCase();
+  const keywords = [
+    "fashion", "shirt", "t-shirt", "tee", "top", "blouse", "jacket", "coat", "hoodie", "sweater",
+    "pant", "pants", "trouser", "jean", "jeans", "denim", "skirt", "short", "shorts", "bottom",
+    "cargo", "dress", "saree", "sari", "gown", "kurti", "kurta", "salwar", "panjabi", "suit",
+    "blazer", "clothing", "apparel", "wear", "outfit",
+  ];
+  return keywords.some((kw) => text.includes(kw));
+}
 
 const LOW_STOCK_THRESHOLD = 10;
 const NEW_WINDOW_DAYS = 3;
@@ -63,6 +75,9 @@ export default function ProductDetailClient({
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [isTrialRoomOpen, setIsTrialRoomOpen] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [now] = useState(() => Date.now());
 
   if (isLoading) return <Loading label="Loading product..." variant="full" />;
   if (isError || !product) {
@@ -102,13 +117,14 @@ export default function ProductDetailClient({
   const finalPrice = unitPrice(product, matchedVariant?.price);
 
   const daysSinceCreated = product.createdAt
-    ? (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+    ? (now - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24)
     : null;
   const isNew = daysSinceCreated !== null && daysSinceCreated <= NEW_WINDOW_DAYS;
   const isLowStock = availableStock > 0 && availableStock < LOW_STOCK_THRESHOLD;
   const isOutOfStock = availableStock === 0;
 
   const images = product.images && product.images.length > 0 ? product.images : [];
+  const isApparel = isApparelProduct(product);
 
   const wishlisted = isWishlisted(product.id);
 
@@ -190,8 +206,25 @@ export default function ProductDetailClient({
               )}
             </div>
 
+            {/* Quick Virtual Trial Room badge overlay */}
+            {isApparel && images.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setIsTrialRoomOpen(true)}
+                className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-[#2B2420]/85 px-3 py-1.5 text-xs font-medium text-white shadow-md backdrop-blur-sm transition-all hover:bg-[#8E3D14] hover:scale-105"
+                title="Try on this item virtually with AI"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-[#E7C182]" />
+                <span>Virtual Try-On</span>
+              </button>
+            )}
+
             {images.length > 0 ? (
-              <Swiper spaceBetween={10} className="aspect-square w-full overflow-hidden rounded-lg bg-[#F2EADA]">
+              <Swiper
+                spaceBetween={10}
+                onSlideChange={(swiper) => setActiveImageIndex(swiper.activeIndex)}
+                className="aspect-square w-full overflow-hidden rounded-lg bg-[#F2EADA]"
+              >
                 {images.map((src, i) => (
                   <SwiperSlide key={i} className="relative">
                     <Image
@@ -214,9 +247,19 @@ export default function ProductDetailClient({
             {images.length > 1 && (
               <div className="mt-3 flex gap-2 overflow-x-auto">
                 {images.map((src, i) => (
-                  <div key={i} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-[#F2EADA]">
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveImageIndex(i)}
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-[#F2EADA] border transition-all ${
+                      activeImageIndex === i
+                        ? "border-[#8E3D14] ring-2 ring-[#8E3D14]/40"
+                        : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
+                    aria-label={`Select photo ${i + 1}`}
+                  >
                     <Image src={src} alt="" fill sizes="64px" className="object-cover" />
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -333,30 +376,61 @@ export default function ProductDetailClient({
               </div>
             </div>
 
-            <div className="mt-2 flex gap-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={isOutOfStock || needsSelection}
-                className="flex flex-1 items-center justify-center gap-2 rounded-sm bg-[#2B2420] px-6 py-3.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                <ShoppingCart className="h-4 w-4" strokeWidth={2} />
-                Add to Cart
-              </button>
+            <div className="mt-2 flex flex-col gap-3">
+              {/* Virtual Trial Room CTA */}
+              {isApparel && (
+                <button
+                  type="button"
+                  onClick={() => setIsTrialRoomOpen(true)}
+                  className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-sm border border-[#C05620] bg-gradient-to-r from-[#FBF8F1] via-[#FFF8EE] to-[#FDF4E7] px-6 py-3 text-sm font-semibold text-[#8E3D14] shadow-xs transition-all duration-300 hover:border-[#8E3D14] hover:bg-[#8E3D14] hover:text-white hover:shadow-sm"
+                >
+                  <Sparkles className="h-4 w-4 text-[#C05620] transition-transform duration-300 group-hover:scale-110 group-hover:text-white" />
+                  <span>Virtual Trial Room — Try On with AI</span>
+                  <span className="ml-1 rounded bg-[#C05620]/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#8E3D14] group-hover:bg-white/20 group-hover:text-white">
+                    AI Beta
+                  </span>
+                </button>
+              )}
 
-              <button
-                onClick={handleWishlist}
-                aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                aria-pressed={wishlisted}
-                className="flex h-12 w-12 items-center justify-center rounded-sm border border-[#2B2420] text-[#8E3D14] transition-colors hover:bg-[#F0E6D2]"
-              >
-                <Heart className="h-5 w-5" strokeWidth={2} fill={wishlisted ? "#8E3D14" : "none"} />
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock || needsSelection}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-sm bg-[#2B2420] px-6 py-3.5 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  <ShoppingCart className="h-4 w-4" strokeWidth={2} />
+                  Add to Cart
+                </button>
+
+                <button
+                  onClick={handleWishlist}
+                  aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                  aria-pressed={wishlisted}
+                  className="flex h-12 w-12 items-center justify-center rounded-sm border border-[#2B2420] text-[#8E3D14] transition-colors hover:bg-[#F0E6D2]"
+                >
+                  <Heart className="h-5 w-5" strokeWidth={2} fill={wishlisted ? "#8E3D14" : "none"} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <ReviewSection productId={product.id} />
         <RelatedProducts productId={product.id} />
+
+        {/* Virtual Trial Room Modal */}
+        <TrialRoomModal
+          isOpen={isTrialRoomOpen}
+          onClose={() => setIsTrialRoomOpen(false)}
+          product={{
+            id: product.id,
+            name: product.name,
+            images: images,
+            price: finalPrice,
+            category: product.category,
+          }}
+          selectedImage={images[activeImageIndex] || images[0]}
+        />
       </div>
     </section>
   );
