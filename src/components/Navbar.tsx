@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react";
+import { Search, Heart, ShoppingBag, User, Menu, X, Sparkles } from "lucide-react";
 import { API_URL } from "@/config/api";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist";
@@ -98,7 +98,18 @@ export default function Navbar() {
         </Link>
 
         {/* Nav links - desktop */}
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-6 lg:flex">
+          <Link
+            href="/products"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-[#C05620]/30 bg-[#C05620]/10 px-3 py-1 text-xs font-semibold text-[#8E3D14] transition-all hover:bg-[#8E3D14] hover:text-white"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#C05620] transition-transform group-hover:rotate-12 group-hover:text-white" />
+            <span>AI Trial Room</span>
+            <span className="rounded bg-[#C05620] px-1.5 py-0.2 text-[9px] font-bold text-white uppercase tracking-wider">
+              NEW
+            </span>
+          </Link>
+
           {navLinks.map((link) => (
             <Link
               key={link.label}
@@ -223,6 +234,20 @@ export default function Navbar() {
           </form>
 
           <nav className="flex flex-col gap-1">
+            {/* AI Trial Room feature link */}
+            <Link
+              href="/products"
+              onClick={() => setMobileOpen(false)}
+              className="mb-1 flex items-center justify-between rounded-md bg-[#C05620]/10 px-3 py-2 text-sm font-semibold text-[#8E3D14] transition-colors hover:bg-[#C05620]/20"
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-[#C05620]" />
+                Virtual Trial Room
+              </span>
+              <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
+                NEW
+              </span>
+            </Link>
             {/* Wishlist - buyer only */}
             {userRole === "buyer" && (
               <Link
