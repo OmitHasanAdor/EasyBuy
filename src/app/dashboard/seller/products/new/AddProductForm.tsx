@@ -5,6 +5,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
 import { MAX_DISCOUNT_PERCENT } from "@/lib/pricing"
+import { Sparkles, Loader2 } from "lucide-react";
+import { requestListingCopy } from "@/lib/listing-copilot";
+import { toast } from "sonner";
 
 type Variant = {
   size: string
@@ -19,6 +22,14 @@ type Props = {
 
 export default function AddProductForm({ token }: Props) {
   const router = useRouter()
+
+
+  const [notes, setNotes] = useState("");
+const [tags, setTags] = useState("");
+const [seoKeywords, setSeoKeywords] = useState("");
+const [aiLoading, setAiLoading] = useState(false);
+
+
 
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -37,6 +48,30 @@ export default function AddProductForm({ token }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+
+
+async function runListingCopilot() {
+  setAiLoading(true);
+  try {
+    const result = await requestListingCopy({
+      name: name || undefined,
+      category: category || undefined,
+      price: price ? Number(price) : undefined,
+      notes: notes || undefined,
+    });
+    setName(result.title);
+    setDescription(result.description);
+    if (result.category) setCategory(result.category);
+    setTags(result.tags.join(", "));
+    setSeoKeywords(result.seoKeywords.join(", "));
+    toast.success("Title, description & category filled — set price & stock yourself");
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "AI generate failed");
+  } finally {
+    setAiLoading(false);
+  }
+}
+
 
   function addVariant() {
     setVariants([
@@ -226,6 +261,49 @@ export default function AddProductForm({ token }: Props) {
               className="w-full resize-none rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
             />
           </div>
+          <div className="rounded-lg border border-[#E7DCC4] bg-white p-4">
+  <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="flex items-center gap-2">
+      <Sparkles className="h-4 w-4 text-[#C05620]" />
+      <p className="text-sm font-semibold text-[#2B2420]">ListingCopilot</p>
+    </div>
+    <button
+      type="button"
+      disabled={aiLoading}
+      onClick={runListingCopilot}
+      className="inline-flex items-center gap-2 rounded-sm bg-[#C05620] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+    >
+      {aiLoading ? (
+        <>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Generating…
+        </>
+      ) : (
+        <>
+          <Sparkles className="h-3.5 w-3.5" />
+          Generate with AI
+        </>
+      )}
+    </button>
+  </div>
+  <p className="mb-2 text-xs text-neutral-500">
+    Enter a rough name, category, price, and optional notes — AI fills title &
+    description. Edit before publishing.
+  </p>
+  <textarea
+    value={notes}
+    onChange={(e) => setNotes(e.target.value)}
+    rows={2}
+    placeholder="Notes: linen, casual, summer, slim fit…"
+    className="w-full rounded-sm border border-[#E7DCC4] bg-[#FBF8F1] px-3 py-2 text-sm outline-none focus:border-[#C05620]"
+  />
+  {/* if you store tags / seo in DB later, show fields; else optional preview */}
+  {(tags || seoKeywords) && (
+    <p className="mt-2 text-[11px] text-neutral-500">
+      Tags: {tags || "—"} · SEO: {seoKeywords || "—"}
+    </p>
+  )}
+</div>
 
           {/* Price + Category */}
           <div className="grid gap-5 md:grid-cols-2">
