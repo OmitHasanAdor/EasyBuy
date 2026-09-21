@@ -51,3 +51,7 @@ next-env.d.ts
 .windsurf/
 skills-lock.json
 
+# Local implementation guides (not committed)
+VIRTUAL_TRIAL_ROOM_GUIDE.md
+
+
