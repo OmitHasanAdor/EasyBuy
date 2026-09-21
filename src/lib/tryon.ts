@@ -25,6 +25,18 @@ export type TryOnResponse = {
 
 const SPACE_NAME = "levihsu/OOTDiffusion";
 
+function toGradioFile(imageInput: string) {
+  if (imageInput.startsWith("data:")) {
+    const commaIndex = imageInput.indexOf(",");
+    if (commaIndex !== -1) {
+      const base64Data = imageInput.slice(commaIndex + 1);
+      const buffer = Buffer.from(base64Data, "base64");
+      return handle_file(buffer);
+    }
+  }
+  return handle_file(imageInput);
+}
+
 /**
  * Runs AI Virtual Try-On using OOTDiffusion on Hugging Face Spaces.
  * Supports Upper-body, Lower-body, and Dress categories.
@@ -44,8 +56,8 @@ export async function runVirtualTryOn(params: TryOnRequest): Promise<TryOnRespon
       token: token as `hf_${string}`,
     });
 
-    const personFile = handle_file(params.personImageUrl);
-    const garmentFile = handle_file(params.garmentImageUrl);
+    const personFile = toGradioFile(params.personImageUrl);
+    const garmentFile = toGradioFile(params.garmentImageUrl);
     const category: GarmentCategory = params.category || "Upper-body";
 
     // Call /process_dc (Dual-category and Dress try-on pipeline)
