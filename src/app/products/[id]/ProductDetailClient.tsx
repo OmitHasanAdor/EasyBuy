@@ -19,17 +19,7 @@ import { useWishlist } from "@/lib/wishlist";
 import { trackRecentlyViewed } from "@/lib/recently-viewed";
 import { isDiscountActive, unitPrice } from "@/lib/pricing";
 import TrialRoomModal from "@/components/trial-room/TrialRoomModal";
-
-function isApparelProduct(product: { name: string; category?: string }): boolean {
-  const text = `${product.name} ${product.category || ""}`.toLowerCase();
-  const keywords = [
-    "fashion", "shirt", "t-shirt", "tee", "top", "blouse", "jacket", "coat", "hoodie", "sweater",
-    "pant", "pants", "trouser", "jean", "jeans", "denim", "skirt", "short", "shorts", "bottom",
-    "cargo", "dress", "saree", "sari", "gown", "kurti", "kurta", "salwar", "panjabi", "suit",
-    "blazer", "clothing", "apparel", "wear", "outfit",
-  ];
-  return keywords.some((kw) => text.includes(kw));
-}
+import { isApparelProduct } from "@/lib/apparel";
 
 const LOW_STOCK_THRESHOLD = 10;
 const NEW_WINDOW_DAYS = 3;
