@@ -60,7 +60,7 @@ export default function TrialRoomBanner() {
               {/* Actions */}
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/products"
+                  href="/products?tryon=true"
                   className="group flex items-center gap-2 rounded-xl bg-linear-to-r from-[#C05620] to-[#8E3D14] px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:from-[#A84918] hover:to-[#782E09] hover:shadow-xl hover:scale-[1.02]"
                 >
                   <Sparkles className="h-4 w-4 text-[#F7F2E7] transition-transform duration-300 group-hover:rotate-12" />

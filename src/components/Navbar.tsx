@@ -100,7 +100,7 @@ export default function Navbar() {
         {/* Nav links - desktop */}
         <nav className="hidden items-center gap-6 lg:flex">
           <Link
-            href="/products"
+            href="/products?tryon=true"
             className="group inline-flex items-center gap-1.5 rounded-full border border-[#C05620]/30 bg-[#C05620]/10 px-3 py-1 text-xs font-semibold text-[#8E3D14] transition-all hover:bg-[#8E3D14] hover:text-white"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#C05620] transition-transform group-hover:rotate-12 group-hover:text-white" />
@@ -236,7 +236,7 @@ export default function Navbar() {
           <nav className="flex flex-col gap-1">
             {/* AI Trial Room feature link */}
             <Link
-              href="/products"
+              href="/products?tryon=true"
               onClick={() => setMobileOpen(false)}
               className="mb-1 flex items-center justify-between rounded-md bg-[#C05620]/10 px-3 py-2 text-sm font-semibold text-[#8E3D14] transition-colors hover:bg-[#C05620]/20"
             >
