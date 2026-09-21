@@ -13,6 +13,8 @@ import {
   RotateCcw,
   ShoppingCart,
   Info,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
@@ -69,6 +71,8 @@ export default function TrialRoomModal({
   const [loadingStep, setLoadingStep] = useState(0);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [savingLook, setSavingLook] = useState(false);
+  const [savedLook, setSavedLook] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset/sync category when product changes
@@ -180,6 +184,33 @@ export default function TrialRoomModal({
     document.body.removeChild(a);
   };
 
+  const handleSaveLook = async () => {
+    if (!resultImage || savingLook || savedLook) return;
+    setSavingLook(true);
+    try {
+      const res = await fetch("/api/trial-room/looks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          productName: product.name,
+          imageUrl: resultImage,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Could not save look.");
+      }
+      setSavedLook(true);
+      toast.success("Look saved to your account!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save look.";
+      toast.error(msg);
+    } finally {
+      setSavingLook(false);
+    }
+  };
+
   const handleAddToCart = async () => {
     const success = await addItem({
       id: product.id,
@@ -198,6 +229,7 @@ export default function TrialRoomModal({
     setPersonImage(null);
     setResultImage(null);
     setError(null);
+    setSavedLook(false);
   };
 
   if (!isOpen) return null;
@@ -289,20 +321,41 @@ export default function TrialRoomModal({
 
                 {/* Bottom Action Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E7DCC4] bg-white p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <button
                       onClick={resetAll}
-                      className="flex items-center gap-2 rounded-xl border border-[#E7DCC4] bg-[#FAF7F2] px-4 py-2 text-sm font-medium text-[#2B2420] hover:bg-white transition-colors"
+                      className="flex items-center gap-1.5 rounded-xl border border-[#E7DCC4] bg-[#FAF7F2] px-3.5 py-2 text-xs sm:text-sm font-medium text-[#2B2420] hover:bg-white transition-colors"
                     >
                       <RotateCcw className="h-4 w-4 text-[#8E3D14]" />
                       Try Another Photo
                     </button>
                     <button
+                      onClick={handleSaveLook}
+                      disabled={savingLook || savedLook}
+                      className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors ${
+                        savedLook
+                          ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                          : "border-[#E7DCC4] bg-[#FAF7F2] text-[#2B2420] hover:bg-white disabled:opacity-50"
+                      }`}
+                    >
+                      {savedLook ? (
+                        <>
+                          <BookmarkCheck className="h-4 w-4 text-emerald-600" />
+                          Saved Look
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="h-4 w-4 text-[#8E3D14]" />
+                          {savingLook ? "Saving..." : "Save Look"}
+                        </>
+                      )}
+                    </button>
+                    <button
                       onClick={handleDownload}
-                      className="flex items-center gap-2 rounded-xl border border-[#E7DCC4] bg-[#FAF7F2] px-4 py-2 text-sm font-medium text-[#2B2420] hover:bg-white transition-colors"
+                      className="flex items-center gap-1.5 rounded-xl border border-[#E7DCC4] bg-[#FAF7F2] px-3.5 py-2 text-xs sm:text-sm font-medium text-[#2B2420] hover:bg-white transition-colors"
                     >
                       <Download className="h-4 w-4 text-[#8E3D14]" />
-                      Download Look
+                      Download
                     </button>
                   </div>
 
