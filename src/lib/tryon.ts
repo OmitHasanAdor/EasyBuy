@@ -71,7 +71,7 @@ export async function runVirtualTryOn(params: TryOnRequest): Promise<TryOnRespon
       params.seed ?? -1, // seed
     ]);
 
-    const data = result.data as any;
+    const data = result.data as unknown as Array<Array<{ image?: string | { url?: string } }>>;
     // OOTDiffusion returns a nested array of gallery items: [[ { image: { url: ... } } ]]
     const firstOutput = data?.[0]?.[0]?.image;
     const resultUrl = typeof firstOutput === "string" ? firstOutput : firstOutput?.url;
@@ -87,11 +87,12 @@ export async function runVirtualTryOn(params: TryOnRequest): Promise<TryOnRespon
       success: true,
       resultImageUrl: resultUrl,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[runVirtualTryOn error]:", err);
+    const message = err instanceof Error ? err.message : "Failed to process virtual try-on request.";
     return {
       success: false,
-      error: err?.message || "Failed to process virtual try-on request.",
+      error: message,
     };
   }
 }

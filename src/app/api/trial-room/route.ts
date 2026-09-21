@@ -71,12 +71,13 @@ export async function POST(req: NextRequest) {
       success: true,
       resultImageUrl: result.resultImageUrl,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API /api/trial-room] Error:", error);
+    const message = error instanceof Error ? error.message : "Internal server error occurred.";
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Internal server error occurred.",
+        error: message,
       },
       { status: 500 }
     );
