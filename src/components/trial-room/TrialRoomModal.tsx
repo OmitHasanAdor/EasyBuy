@@ -393,11 +393,15 @@ export default function TrialRoomModal({
     setSavedLook(false);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6 md:p-8">
+    <>
+      {/* MAIN TRIAL ROOM MODAL */}
+      <AnimatePresence>
+        {isOpen && (
+          <div
+            key="trial-room-main-modal"
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6 md:p-8"
+          >
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -658,11 +662,11 @@ export default function TrialRoomModal({
 
                       {/* Photo Gallery Strip */}
                       <div className="flex items-center gap-2.5 overflow-x-auto pb-2.5 pt-0.5">
-                        {gallery.map((photo) => {
+                        {gallery.map((photo, pIdx) => {
                           const isSelected = personImage === photo.url;
                           return (
                             <button
-                              key={photo.id}
+                              key={photo.id || `thumb-pose-${pIdx}`}
                               type="button"
                               onClick={() => {
                                 setPersonImage(photo.url);
@@ -787,12 +791,17 @@ export default function TrialRoomModal({
             )}
           </div>
         </motion.div>
-      </div>
+        </div>
+      )}
+    </AnimatePresence>
 
       {/* MANAGE GALLERY MODAL */}
       <AnimatePresence>
         {isGalleryManagerOpen && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div
+            key="trial-room-gallery-manager-modal"
+            className="fixed inset-0 z-60 flex items-center justify-center p-4"
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -828,11 +837,11 @@ export default function TrialRoomModal({
               {/* Photo Grid */}
               <div className="max-h-[60vh] overflow-y-auto p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {gallery.map((photo) => {
+                  {gallery.map((photo, pIdx) => {
                     const isSelected = personImage === photo.url;
                     return (
                       <div
-                        key={photo.id}
+                        key={photo.id || `gallery-manage-${pIdx}`}
                         className={`relative flex flex-col overflow-hidden rounded-xl border bg-white p-2.5 transition-all shadow-xs ${
                           isSelected ? "border-[#C05620] ring-2 ring-[#C05620]/20" : "border-[#E7DCC4]"
                         }`}
@@ -927,7 +936,10 @@ export default function TrialRoomModal({
       {/* CONFIRMATION MODAL ALERT BOX FOR DELETING PHOTO */}
       <AnimatePresence>
         {photoToDelete && (
-          <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
+          <div
+            key="trial-room-delete-confirmation-modal"
+            className="fixed inset-0 z-70 flex items-center justify-center p-4"
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -970,6 +982,6 @@ export default function TrialRoomModal({
           </div>
         )}
       </AnimatePresence>
-    </AnimatePresence>
+    </>
   );
 }
