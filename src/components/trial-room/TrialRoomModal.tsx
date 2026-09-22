@@ -17,6 +17,8 @@ import {
   BookmarkCheck,
   Check,
   Trash2,
+  AlertTriangle,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
@@ -243,14 +245,18 @@ export default function TrialRoomModal({
     [gallery, session?.user]
   );
 
-  // Remove a photo from personal gallery
-  const handleDeletePhoto = (photoId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const [isGalleryManagerOpen, setIsGalleryManagerOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<UserGalleryPhoto | null>(null);
+
+  // Confirm delete of a photo from personal gallery
+  const confirmDeletePhoto = () => {
+    if (!photoToDelete) return;
     if (gallery.length <= 1) {
       toast.error("You need at least one photo in your gallery.");
+      setPhotoToDelete(null);
       return;
     }
-    const updated = gallery.filter((p) => p.id !== photoId);
+    const updated = gallery.filter((p) => p.id !== photoToDelete.id);
     setGallery(updated);
     const storageKey = `easybuy_gallery_${session?.user?.id || session?.user?.email || "guest"}`;
     try {
@@ -259,11 +265,12 @@ export default function TrialRoomModal({
       // ignore
     }
 
-    if (personImage === gallery.find((p) => p.id === photoId)?.url) {
+    if (personImage === photoToDelete.url) {
       setPersonImage(updated[0]?.url || null);
       setResultImage(null);
     }
-    toast.success("Photo removed from your gallery.");
+    toast.success(`Removed "${photoToDelete.label}" from your gallery.`);
+    setPhotoToDelete(null);
   };
 
   // Submit try-on request to server API
@@ -604,39 +611,50 @@ export default function TrialRoomModal({
                 <div className="lg:col-span-7 flex flex-col">
                   <div className="flex-1 rounded-2xl border border-[#E7DCC4] bg-white p-6 flex flex-col justify-between">
                     <div>
-                      {/* Header with Add Photo CTA */}
+                      {/* Header with Manage Gallery and Add Photo CTA */}
                       <div className="flex items-center justify-between mb-2.5">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-wider text-[#8E3D14]/80">
                             My Try-On Photos
                           </p>
                           <p className="text-[11px] text-[#5C4D44] mt-0.5">
-                            Select a photo from your private gallery or add a new pose
+                            Select a photo to try on or manage your personal gallery
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-xs font-semibold text-[#C05620] hover:text-[#A84918] inline-flex items-center gap-1.5 rounded-lg border border-[#E7DCC4] bg-[#FAF7F2] px-2.5 py-1.5 hover:bg-white transition-all shadow-sm"
-                        >
-                          <UploadCloud className="h-3.5 w-3.5" />
-                          + Add Photo
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsGalleryManagerOpen(true)}
+                            className="text-xs font-semibold text-[#8E3D14] hover:text-[#2B2420] inline-flex items-center gap-1.5 rounded-lg border border-[#E7DCC4] bg-[#FAF7F2] px-2.5 py-1.5 hover:bg-white transition-all shadow-xs"
+                          >
+                            <Layers className="h-3.5 w-3.5 text-[#C05620]" />
+                            Manage Gallery
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="text-xs font-semibold text-[#C05620] hover:text-[#A84918] inline-flex items-center gap-1.5 rounded-lg border border-[#C05620]/30 bg-[#C05620]/10 px-2.5 py-1.5 hover:bg-[#C05620]/20 transition-all shadow-xs"
+                          >
+                            <UploadCloud className="h-3.5 w-3.5" />
+                            + Add Photo
+                          </button>
+                        </div>
                       </div>
 
                       {/* Photo Gallery Strip */}
-                      <div className="flex items-center gap-2 overflow-x-auto pb-2.5 pt-0.5">
+                      <div className="flex items-center gap-2.5 overflow-x-auto pb-2.5 pt-0.5">
                         {gallery.map((photo) => {
                           const isSelected = personImage === photo.url;
                           return (
-                            <div
+                            <button
                               key={photo.id}
+                              type="button"
                               onClick={() => {
                                 setPersonImage(photo.url);
                                 setResultImage(null);
                                 setError(null);
                               }}
-                              className={`group relative shrink-0 cursor-pointer rounded-xl border-2 transition-all p-0.5 ${
+                              className={`group relative shrink-0 cursor-pointer rounded-xl border-2 transition-all p-0.5 text-left ${
                                 isSelected
                                   ? "border-[#C05620] ring-2 ring-[#C05620]/25 shadow-sm"
                                   : "border-[#E7DCC4] hover:border-[#8E3D14]/40"
@@ -656,34 +674,13 @@ export default function TrialRoomModal({
                                     </div>
                                   </div>
                                 )}
-                                {gallery.length > 1 && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => handleDeletePhoto(photo.id, e)}
-                                    className="absolute top-0.5 right-0.5 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-black/70 text-white hover:bg-red-600 transition-colors"
-                                    title="Remove from gallery"
-                                  >
-                                    <Trash2 className="h-2.5 w-2.5" />
-                                  </button>
-                                )}
                               </div>
                               <p className="mt-0.5 max-w-[56px] truncate text-center text-[10px] font-medium text-[#5C4D44]">
                                 {photo.label}
                               </p>
-                            </div>
+                            </button>
                           );
                         })}
-
-                        {/* "+ Add" Card in gallery */}
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="shrink-0 flex flex-col items-center justify-center h-[68px] w-14 rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] text-[#8E3D14] hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all"
-                          title="Upload a new photo to your gallery"
-                        >
-                          <UploadCloud className="h-4 w-4 text-[#C05620]" />
-                          <span className="text-[10px] font-semibold mt-1 text-[#C05620]">+ Add</span>
-                        </button>
                       </div>
 
                       {/* Main Preview of Selected Photo */}
@@ -695,18 +692,6 @@ export default function TrialRoomModal({
                             alt="Selected Try-On Photo"
                             className="h-full w-full object-contain"
                           />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPersonImage(null);
-                              setResultImage(null);
-                              setError(null);
-                            }}
-                            className="absolute top-3 right-3 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
-                            title="Remove photo"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
                           {/* Bottom info pill */}
                           <div className="absolute bottom-2 left-2 rounded-lg bg-black/65 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
                             {gallery.find((p) => p.url === personImage)?.label || "Selected Photo"}
@@ -788,6 +773,179 @@ export default function TrialRoomModal({
           </div>
         </motion.div>
       </div>
+
+      {/* MANAGE GALLERY MODAL */}
+      <AnimatePresence>
+        {isGalleryManagerOpen && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              onClick={() => setIsGalleryManagerOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl border border-[#E7DCC4] bg-[#FAF7F2] shadow-2xl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#E7DCC4] bg-white px-6 py-4">
+                <div>
+                  <h3 className="font-serif text-lg font-semibold text-[#2B2420]">
+                    My Try-On Photo Gallery
+                  </h3>
+                  <p className="text-xs text-[#5C4D44] mt-0.5">
+                    View, upload, and manage the personal photos you use for AI virtual fittings.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryManagerOpen(false)}
+                  className="rounded-full p-1.5 text-neutral-400 hover:bg-[#FAF7F2] hover:text-[#2B2420] transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Photo Grid */}
+              <div className="max-h-[60vh] overflow-y-auto p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {gallery.map((photo) => {
+                    const isSelected = personImage === photo.url;
+                    return (
+                      <div
+                        key={photo.id}
+                        className={`relative flex flex-col overflow-hidden rounded-xl border bg-white p-2.5 transition-all shadow-xs ${
+                          isSelected ? "border-[#C05620] ring-2 ring-[#C05620]/20" : "border-[#E7DCC4]"
+                        }`}
+                      >
+                        <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg bg-[#F7F2E7]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={photo.url}
+                            alt={photo.label}
+                            className="h-full w-full object-cover"
+                          />
+                          {isSelected && (
+                            <div className="absolute top-2 left-2 rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-semibold text-white shadow-xs">
+                              Active Pose
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2.5 flex items-center justify-between gap-1">
+                          <span className="truncate text-xs font-semibold text-[#2B2420]">
+                            {photo.label}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPhotoToDelete(photo)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                            title="Delete photo"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPersonImage(photo.url);
+                            setResultImage(null);
+                            setError(null);
+                            setIsGalleryManagerOpen(false);
+                          }}
+                          className={`mt-2 w-full rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                            isSelected
+                              ? "bg-[#2B2420] text-white"
+                              : "border border-[#E7DCC4] bg-[#FAF7F2] text-[#2B2420] hover:bg-white"
+                          }`}
+                        >
+                          {isSelected ? "Selected" : "Use for Try-On"}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {/* Upload Card */}
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex aspect-3/4 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] p-4 text-center hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#C05620] shadow-xs mb-2">
+                      <UploadCloud className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs font-semibold text-[#2B2420]">Upload New Photo</p>
+                    <p className="mt-1 text-[10px] text-[#8E3D14]/70">PNG, JPG, WebP</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between border-t border-[#E7DCC4] bg-white px-6 py-3.5">
+                <span className="text-xs text-[#5C4D44]">
+                  {gallery.length} {gallery.length === 1 ? "photo" : "photos"} in gallery
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryManagerOpen(false)}
+                  className="rounded-xl bg-[#2B2420] px-5 py-2 text-xs font-semibold text-white hover:bg-[#3D332D] transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CONFIRMATION MODAL ALERT BOX FOR DELETING PHOTO */}
+      <AnimatePresence>
+        {photoToDelete && (
+          <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+              onClick={() => setPhotoToDelete(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 15 }}
+              className="relative z-10 w-full max-w-sm rounded-2xl border border-red-100 bg-white p-6 shadow-2xl text-center"
+            >
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-3.5">
+                <AlertTriangle className="h-6 w-6 stroke-[2.2]" />
+              </div>
+              <h3 className="font-serif text-lg font-bold text-[#2B2420]">
+                Delete Try-On Photo?
+              </h3>
+              <p className="mt-2 text-xs text-[#5C4D44] leading-relaxed">
+                Are you sure you want to remove <span className="font-semibold text-[#2B2420]">"{photoToDelete.label}"</span> from your try-on gallery? You can always upload it again later.
+              </p>
+              <div className="mt-5 flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPhotoToDelete(null)}
+                  className="flex-1 rounded-xl border border-[#E7DCC4] py-2.5 text-xs font-semibold text-[#2B2420] hover:bg-[#FAF7F2] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeletePhoto}
+                  className="flex-1 rounded-xl bg-red-600 py-2.5 text-xs font-semibold text-white hover:bg-red-700 shadow-xs transition-colors"
+                >
+                  Delete Photo
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }
