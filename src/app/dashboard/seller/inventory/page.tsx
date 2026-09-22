@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/session";
 import { serverApiFetch } from "@/lib/server-api";
 import { Boxes, AlertTriangle } from "lucide-react";
 import { StockEditor } from "./StockEditor";
+import StockMindPanel from "./StockMindPanel";
 
 type Variant = {
   id: number;
@@ -59,6 +60,8 @@ export default async function SellerInventoryPage() {
 
   return (
     <div className="space-y-6 p-6 md:p-8">
+
+   
       {/* Header */}
       <div>
         <h1 className="font-serif text-2xl font-medium text-[#2B2420]">
@@ -180,6 +183,8 @@ export default async function SellerInventoryPage() {
           ))}
         </div>
       )}
+
+         <StockMindPanel />
     </div>
   );
 }

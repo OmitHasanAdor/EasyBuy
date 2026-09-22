@@ -1,13 +1,15 @@
 "use client"
 
 import { API_URL } from "@/config/api";
-import { useState } from "react"
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
 import { MAX_DISCOUNT_PERCENT } from "@/lib/pricing"
 import { Sparkles, Loader2 } from "lucide-react";
 import { requestListingCopy } from "@/lib/listing-copilot";
 import { toast } from "sonner";
+import { TrendingUp } from "lucide-react";
+import { fetchPriceSense, type PriceSenseResult } from "@/lib/price-sense";
 
 type Variant = {
   size: string
@@ -48,7 +50,30 @@ const [aiLoading, setAiLoading] = useState(false);
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+const [priceSense, setPriceSense] = useState<PriceSenseResult | null>(null);
+const [priceSenseLoading, setPriceSenseLoading] = useState(false);
 
+useEffect(() => {
+  const cat = category.trim();
+  if (cat.length < 2) {
+    setPriceSense(null);
+    return;
+  }
+
+  const t = setTimeout(async () => {
+    setPriceSenseLoading(true);
+    try {
+      const data = await fetchPriceSense(cat);
+      setPriceSense(data);
+    } catch {
+      setPriceSense(null);
+    } finally {
+      setPriceSenseLoading(false);
+    }
+  }, 400); // debounce
+
+  return () => clearTimeout(t);
+}, [category]);
 
 async function runListingCopilot() {
   setAiLoading(true);
@@ -337,6 +362,29 @@ async function runListingCopilot() {
               />
             </div>
           </div>
+
+          <div className="mt-2 rounded-md border border-[#E7DCC4] bg-[#FBF8F1] px-3 py-2">
+  <div className="flex items-center gap-2 text-xs font-semibold text-[#2B2420]">
+    <TrendingUp className="h-3.5 w-3.5 text-[#C05620]" />
+    PriceSense
+    {priceSenseLoading && (
+      <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
+    )}
+  </div>
+  <p className="mt-1 text-xs text-neutral-600">
+    {priceSense?.message ||
+      "Select or type a category to see typical prices on EasyBuy."}
+  </p>
+  {priceSense?.suggested != null && (
+    <button
+      type="button"
+      onClick={() => setPrice(String(priceSense.suggested))}
+      className="mt-2 text-xs font-semibold text-[#C05620] hover:underline"
+    >
+      Use suggested ৳{priceSense.suggested.toLocaleString()}
+    </button>
+  )}
+</div>
 
           {/* Image */}
           <div>
