@@ -175,6 +175,16 @@ export default function BuyerLooksPage() {
     setPhotoToDelete(null);
   };
 
+  const handleRestoreDefaults = () => {
+    const defaults = getInitialUserPhotos(session?.user);
+    setGallery(defaults);
+    const storageKey = `easybuy_gallery_${session?.user?.id || session?.user?.email || "guest"}`;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(defaults));
+    } catch {}
+    toast.success("Restored default try-on photos!");
+  };
+
   // Query saved looks from database
   const { data: looks = [], isLoading } = useQuery<TryOnLook[]>({
     queryKey: ["my-looks"],
@@ -392,6 +402,22 @@ export default function BuyerLooksPage() {
         {/* TAB 2: MY TRY-ON PHOTOS */}
         {activeTab === "photos" && (
           <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E7DCC4] pb-4">
+              <div>
+                <h2 className="font-serif text-lg font-semibold text-[#2B2420]">Personal Model Gallery</h2>
+                <p className="text-xs text-[#5C4D44] mt-0.5">
+                  Manage the photos used as your model in the AI Virtual Trial Room.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRestoreDefaults}
+                className="rounded-xl border border-[#E7DCC4] bg-[#FAF7F2] px-4 py-2 text-xs font-semibold text-[#8E3D14] hover:bg-white hover:border-[#8E3D14] transition-colors"
+              >
+                Restore Default Poses
+              </button>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {gallery.map((photo) => (
                 <motion.div

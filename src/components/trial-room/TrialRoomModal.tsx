@@ -273,6 +273,21 @@ export default function TrialRoomModal({
     setPhotoToDelete(null);
   };
 
+  const handleRestoreDefaults = () => {
+    const defaults = getInitialUserPhotos(session?.user);
+    setGallery(defaults);
+    if (!personImage || !defaults.some((p) => p.url === personImage)) {
+      setPersonImage(defaults[0]?.url || null);
+    }
+    const storageKey = `easybuy_gallery_${session?.user?.id || session?.user?.email || "guest"}`;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(defaults));
+    } catch {
+      // ignore
+    }
+    toast.success("Restored default try-on photos!");
+  };
+
   // Submit try-on request to server API
   const handleGenerateTryOn = async () => {
     if (!personImage) {
@@ -884,9 +899,18 @@ export default function TrialRoomModal({
 
               {/* Footer */}
               <div className="flex items-center justify-between border-t border-[#E7DCC4] bg-white px-6 py-3.5">
-                <span className="text-xs text-[#5C4D44]">
-                  {gallery.length} {gallery.length === 1 ? "photo" : "photos"} in gallery
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-[#5C4D44]">
+                    {gallery.length} {gallery.length === 1 ? "photo" : "photos"} in gallery
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRestoreDefaults}
+                    className="text-xs font-semibold text-[#8E3D14] hover:underline transition-colors"
+                  >
+                    Restore Default Poses
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsGalleryManagerOpen(false)}
