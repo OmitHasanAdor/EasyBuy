@@ -316,17 +316,24 @@ export default function TrialRoomModal({
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Generation failed. Please try again.");
+      if (!res.ok || !data?.success) {
+        const errorMsg =
+          data?.error ||
+          "Virtual try-on generation failed. Please wait a moment and try again.";
+        setError(errorMsg);
+        toast.error(errorMsg);
+        return;
       }
 
       setResultImage(data.resultImageUrl);
       toast.success("Virtual Try-On complete!");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
-      console.error("Try-On Error:", err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Network request failed. Please check your connection and try again.";
       setError(msg);
       toast.error(msg);
     } finally {
@@ -760,9 +767,16 @@ export default function TrialRoomModal({
 
                     {/* Error display if any */}
                     {error && (
-                      <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-                        <AlertCircle className="h-4 w-4 shrink-0" />
-                        <span>{error}</span>
+                      <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/95 p-3.5 text-xs text-amber-900 shadow-xs">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                        <div className="flex-1 leading-relaxed">
+                          <p className="font-semibold text-amber-950">
+                            {error.includes("ZeroGPU") || error.includes("quota")
+                              ? "AI Engine Cooldown Notice"
+                              : "Notice"}
+                          </p>
+                          <p className="mt-0.5 text-amber-850">{error}</p>
+                        </div>
                       </div>
                     )}
 
