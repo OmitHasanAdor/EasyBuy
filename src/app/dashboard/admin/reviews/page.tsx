@@ -3,6 +3,14 @@ import { requireRole } from "@/lib/session";
 import { serverApiFetch } from "@/lib/server-api";
 import { Star } from "lucide-react";
 import { DeleteReviewButton } from "./DeleteReviewButton";
+import GuardBadge from "./GuardBadge";
+
+type ReviewGuard = {
+  risk: "ok" | "suspicious" | "likely_spam";
+  score: number;
+  reasons: string[];
+  aiNote?: string;
+};
 
 type Review = {
   id: number;
@@ -13,6 +21,7 @@ type Review = {
   createdAt: string;
   product: { id: number; name: string; images: string[] };
   user: { id: string; name: string; email: string };
+  guard?: ReviewGuard;
 };
 
 async function getReviews(): Promise<Review[]> {
@@ -34,6 +43,10 @@ export default async function AdminReviewsPage() {
       ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
       : 0;
 
+  const flagged = reviews.filter(
+    (r) => r.guard?.risk === "suspicious" || r.guard?.risk === "likely_spam"
+  ).length;
+
   return (
     <div className="space-y-6 p-6 md:p-8">
       <div>
@@ -42,6 +55,7 @@ export default async function AdminReviewsPage() {
         </h1>
         <p className="mt-1 text-sm text-[#8E3D14]/80">
           {reviews.length} reviews · avg {avg > 0 ? avg.toFixed(1) : "—"}★
+          {flagged > 0 ? ` · ${flagged} flagged by ReviewGuard` : ""}
         </p>
       </div>
 
@@ -105,6 +119,9 @@ export default async function AdminReviewsPage() {
                   {r.comment && (
                     <p className="mt-1 text-sm text-[#3A342C]">{r.comment}</p>
                   )}
+
+                  {r.guard && <GuardBadge guard={r.guard} />}
+
                   <p className="mt-2 text-xs text-[#8E3D14]/60">
                     {r.user.email} · {new Date(r.createdAt).toLocaleString()}
                   </p>
