@@ -15,10 +15,12 @@ import {
   Info,
   Bookmark,
   BookmarkCheck,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useCart } from "@/lib/cart-context";
+import { DEMO_AVATARS } from "@/lib/trial-room-presets";
 import BeforeAfterSlider from "./BeforeAfterSlider";
 import type { GarmentCategory } from "@/lib/tryon";
 
@@ -74,6 +76,13 @@ export default function TrialRoomModal({
   const [savingLook, setSavingLook] = useState(false);
   const [savedLook, setSavedLook] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-select user avatar from session when modal opens if not already selected
+  useEffect(() => {
+    if (session?.user?.image && !personImage) {
+      setPersonImage(session.user.image);
+    }
+  }, [session?.user?.image, personImage]);
 
   // Reset/sync category when product changes
   const [prevProductId, setPrevProductId] = useState(product.id);
@@ -465,12 +474,80 @@ export default function TrialRoomModal({
                 <div className="lg:col-span-7 flex flex-col">
                   <div className="flex-1 rounded-2xl border border-[#E7DCC4] bg-white p-6 flex flex-col justify-between">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-[#8E3D14]/80 mb-3">
-                        Your Photo
-                      </p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#8E3D14]/80">
+                          Try-On Photo
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-xs font-medium text-[#C05620] hover:underline inline-flex items-center gap-1"
+                        >
+                          <UploadCloud className="h-3.5 w-3.5" />
+                          Upload Custom
+                        </button>
+                      </div>
+
+                      {/* Quick Model Selector Pills */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-0.5">
+                        {session?.user?.image && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPersonImage(session.user.image!);
+                              setResultImage(null);
+                              setError(null);
+                            }}
+                            className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-all ${
+                              personImage === session.user.image
+                                ? "border-[#C05620] bg-[#C05620]/10 text-[#C05620] font-semibold ring-2 ring-[#C05620]/20"
+                                : "border-[#E7DCC4] bg-[#FAF7F2] text-[#5C4D44] hover:bg-white"
+                            }`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={session.user.image}
+                              alt="My Profile Photo"
+                              className="h-4 w-4 rounded-full object-cover"
+                            />
+                            <span>My Photo</span>
+                            {personImage === session.user.image && <Check className="h-3 w-3 text-[#C05620]" />}
+                          </button>
+                        )}
+
+                        {DEMO_AVATARS.map((avatar) => {
+                          const isSelected = personImage === avatar.imageUrl;
+                          return (
+                            <button
+                              key={avatar.id}
+                              type="button"
+                              onClick={() => {
+                                setPersonImage(avatar.imageUrl);
+                                setResultImage(null);
+                                setError(null);
+                              }}
+                              className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-all ${
+                                isSelected
+                                  ? "border-[#C05620] bg-[#C05620]/10 text-[#C05620] font-semibold ring-2 ring-[#C05620]/20"
+                                  : "border-[#E7DCC4] bg-[#FAF7F2] text-[#5C4D44] hover:bg-white"
+                              }`}
+                              title={avatar.description}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={avatar.imageUrl}
+                                alt={avatar.name}
+                                className="h-4 w-4 rounded-full object-cover"
+                              />
+                              <span>{avatar.name.split(" ")[0]}</span>
+                              {isSelected && <Check className="h-3 w-3 text-[#C05620]" />}
+                            </button>
+                          );
+                        })}
+                      </div>
 
                       {personImage ? (
-                        <div className="relative h-72 sm:h-80 w-full overflow-hidden rounded-xl border border-[#E7DCC4] bg-[#F7F2E7]">
+                        <div className="relative h-64 sm:h-72 w-full overflow-hidden rounded-xl border border-[#E7DCC4] bg-[#F7F2E7]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={personImage}
@@ -485,6 +562,12 @@ export default function TrialRoomModal({
                           >
                             <X className="h-4 w-4" />
                           </button>
+                          {/* Active avatar tag */}
+                          <div className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                            {personImage === session?.user?.image
+                              ? "Profile Photo"
+                              : DEMO_AVATARS.find((a) => a.imageUrl === personImage)?.name || "Custom Photo"}
+                          </div>
                         </div>
                       ) : (
                         <div
@@ -496,7 +579,7 @@ export default function TrialRoomModal({
                             }
                           }}
                           onClick={() => fileInputRef.current?.click()}
-                          className="flex h-72 sm:h-80 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] p-6 text-center hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all"
+                          className="flex h-64 sm:h-72 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] p-6 text-center hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all"
                         >
                           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#C05620] shadow-sm mb-3">
                             <UploadCloud className="h-7 w-7" />

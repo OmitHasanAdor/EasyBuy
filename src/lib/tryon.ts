@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Client, handle_file } from "@gradio/client";
 
 export type GarmentCategory = "Upper-body" | "Lower-body" | "Dress";
@@ -25,7 +27,8 @@ export type TryOnResponse = {
 
 const SPACE_NAME = "levihsu/OOTDiffusion";
 
-function toGradioFile(imageInput: string) {
+async function toGradioFile(imageInput: string) {
+  // 1. Data URL (Base64)
   if (imageInput.startsWith("data:")) {
     const commaIndex = imageInput.indexOf(",");
     if (commaIndex !== -1) {
@@ -34,6 +37,40 @@ function toGradioFile(imageInput: string) {
       return handle_file(buffer);
     }
   }
+
+  // 2. Localhost URL -> extract pathname
+  let cleanPath = imageInput;
+  if (imageInput.startsWith("http://localhost") || imageInput.startsWith("http://127.0.0.1")) {
+    try {
+      const url = new URL(imageInput);
+      cleanPath = url.pathname;
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Local relative path in Next.js public directory
+  if (cleanPath.startsWith("/")) {
+    const localFsPath = path.join(process.cwd(), "public", cleanPath);
+    if (fs.existsSync(localFsPath)) {
+      const buffer = fs.readFileSync(localFsPath);
+      return handle_file(buffer);
+    }
+  }
+
+  // 4. Remote HTTP/HTTPS URL -> fetch and buffer so HF spaces receives direct file
+  if (imageInput.startsWith("http://") || imageInput.startsWith("https://")) {
+    try {
+      const res = await fetch(imageInput);
+      if (res.ok) {
+        const arrayBuf = await res.arrayBuffer();
+        return handle_file(Buffer.from(arrayBuf));
+      }
+    } catch (e) {
+      console.warn("[toGradioFile] fetch failed, falling back to raw URL:", e);
+    }
+  }
+
   return handle_file(imageInput);
 }
 
@@ -56,8 +93,8 @@ export async function runVirtualTryOn(params: TryOnRequest): Promise<TryOnRespon
       token: token as `hf_${string}`,
     });
 
-    const personFile = toGradioFile(params.personImageUrl);
-    const garmentFile = toGradioFile(params.garmentImageUrl);
+    const personFile = await toGradioFile(params.personImageUrl);
+    const garmentFile = await toGradioFile(params.garmentImageUrl);
     const category: GarmentCategory = params.category || "Upper-body";
 
     // Call /process_dc (Dual-category and Dress try-on pipeline)
