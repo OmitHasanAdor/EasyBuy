@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import { API_URL } from "@/config/api";
 import Loading from "@/components/Loading";
@@ -79,6 +80,7 @@ export default function ProductDetailClient({
   const [quantity, setQuantity] = useState(1);
   const [isTrialRoomOpen, setIsTrialRoomOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [swiper, setSwiper] = useState<SwiperType | null>(null);
   const [now] = useState(() => Date.now());
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -299,7 +301,8 @@ export default function ProductDetailClient({
             {images.length > 0 ? (
               <Swiper
                 spaceBetween={10}
-                onSlideChange={(swiper) => setActiveImageIndex(swiper.activeIndex)}
+                onSwiper={setSwiper}
+                onSlideChange={(s) => setActiveImageIndex(s.activeIndex)}
                 className="aspect-square w-full overflow-hidden rounded-lg bg-[#F2EADA]"
               >
                 {images.map((src, i) => (
@@ -326,7 +329,10 @@ export default function ProductDetailClient({
                   <button
                     key={i}
                     type="button"
-                    onClick={() => setActiveImageIndex(i)}
+                    onClick={() => {
+                      setActiveImageIndex(i);
+                      swiper?.slideTo(i);
+                    }}
                     className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-[#F2EADA] border transition-all ${
                       activeImageIndex === i
                         ? "border-[#8E3D14] ring-2 ring-[#8E3D14]/40"
