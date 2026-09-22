@@ -74,62 +74,161 @@ async function toGradioFile(imageInput: string) {
   return handle_file(imageInput);
 }
 
+const PRIMARY_SPACE = "yisol/IDM-VTON";
+const FALLBACK_SPACE = "levihsu/OOTDiffusion";
+
+// High-Fidelity Defaults
+const RECOMMENDED_STEPS = 30; // 30 steps for crisp textile weave and realistic folds
+const RECOMMENDED_SCALE = 2.8; // 2.8 scale for tight boundary alignment
+
+function getAvailableTokens(): string[] {
+  const raw = process.env.HUGGINGFACE_TOKEN || "";
+  return raw
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
 /**
- * Runs AI Virtual Try-On using OOTDiffusion on Hugging Face Spaces.
- * Supports Upper-body, Lower-body, and Dress categories.
+ * Runs AI Virtual Try-On using specialized models per garment category:
+ * - Upper-body: IDM-VTON (State-of-the-Art photorealism) with OOTDiffusion HD fallback
+ * - Lower-body: OOTDiffusion DressCode (/process_dc) with specialized lower-body segmentation
+ * - Dress: OOTDiffusion DressCode (/process_dc) for complete full-length body draping
+ * Supports multi-token rotation if HUGGINGFACE_TOKEN has comma-separated tokens.
  */
 export async function runVirtualTryOn(params: TryOnRequest): Promise<TryOnResponse> {
-  const token = process.env.HUGGINGFACE_TOKEN;
+  const tokens = getAvailableTokens();
 
-  if (!token) {
+  if (tokens.length === 0) {
     return {
       success: false,
       error: "HUGGINGFACE_TOKEN is not configured in the environment.",
     };
   }
 
-  try {
-    const client = await Client.connect(SPACE_NAME, {
-      token: token as `hf_${string}`,
-    });
+  const personFile = await toGradioFile(params.personImageUrl);
+  const garmentFile = await toGradioFile(params.garmentImageUrl);
+  const category: GarmentCategory = params.category || "Upper-body";
 
-    const personFile = await toGradioFile(params.personImageUrl);
-    const garmentFile = await toGradioFile(params.garmentImageUrl);
-    const category: GarmentCategory = params.category || "Upper-body";
+  let lastError = "Virtual try-on processing failed.";
 
-    // Call /process_dc (Dual-category and Dress try-on pipeline)
-    const result = await client.predict("/process_dc", [
-      personFile,
-      garmentFile,
-      category,
-      1, // n_samples
-      params.steps ?? 20, // n_steps
-      params.scale ?? 2.0, // image_scale
-      params.seed ?? -1, // seed
-    ]);
+  // Try available tokens sequentially in case of rate/quota limits
+  for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex++) {
+    const token = tokens[tokenIndex];
 
-    const data = result.data as unknown as Array<Array<{ image?: string | { url?: string } }>>;
-    // OOTDiffusion returns a nested array of gallery items: [[ { image: { url: ... } } ]]
-    const firstOutput = data?.[0]?.[0]?.image;
-    const resultUrl = typeof firstOutput === "string" ? firstOutput : firstOutput?.url;
+    try {
+      // =========================================================================
+      // 1. UPPER-BODY: IDM-VTON Primary (with OOTDiffusion HD fallback)
+      // =========================================================================
+      if (category === "Upper-body") {
+        try {
+          const idmClient = await Client.connect(PRIMARY_SPACE, {
+            token: token as `hf_${string}`,
+          });
 
-    if (!resultUrl) {
-      return {
-        success: false,
-        error: "Virtual Try-On completed but no output image was received.",
-      };
+          const result = await idmClient.predict("/tryon", [
+            { background: personFile, layers: [], composite: null },
+            garmentFile,
+            "upper-body clothing, top, shirt",
+            true, // is_checked (automatic upper-body semantic parsing)
+            false, // is_checked_crop
+            params.steps ?? RECOMMENDED_STEPS,
+            params.seed ?? 42,
+          ]);
+
+          const data = result.data as unknown as Array<{ url?: string } | string>;
+          const firstOutput = data?.[0];
+          const resultUrl = typeof firstOutput === "string" ? firstOutput : firstOutput?.url;
+
+          if (resultUrl) {
+            return {
+              success: true,
+              resultImageUrl: resultUrl,
+            };
+          }
+        } catch (idmErr: unknown) {
+          console.warn("[runVirtualTryOn] IDM-VTON primary failed for Upper-body, trying OOTDiffusion HD:", idmErr);
+        }
+
+        // Upper-body Fallback: OOTDiffusion VITON-HD pipeline
+        try {
+          const ootdClient = await Client.connect(FALLBACK_SPACE, {
+            token: token as `hf_${string}`,
+          });
+
+          const result = await ootdClient.predict("/process_hd", [
+            personFile,
+            garmentFile,
+            1,
+            params.steps ?? RECOMMENDED_STEPS,
+            params.scale ?? RECOMMENDED_SCALE,
+            params.seed ?? -1,
+          ]);
+
+          const data = result.data as unknown as Array<Array<{ image?: string | { url?: string } }>>;
+          const firstOutput = data?.[0]?.[0]?.image;
+          const resultUrl = typeof firstOutput === "string" ? firstOutput : firstOutput?.url;
+
+          if (resultUrl) {
+            return {
+              success: true,
+              resultImageUrl: resultUrl,
+            };
+          }
+        } catch (ootdErr: unknown) {
+          console.error("[runVirtualTryOn] OOTDiffusion HD fallback failed:", ootdErr);
+        }
+      }
+
+      // =========================================================================
+      // 2. LOWER-BODY & DRESS: OOTDiffusion DressCode Pipeline (/process_dc)
+      // =========================================================================
+      const ootdClient = await Client.connect(FALLBACK_SPACE, {
+        token: token as `hf_${string}`,
+      });
+
+      const steps = params.steps ?? (category === "Lower-body" ? 22 : RECOMMENDED_STEPS);
+      const scale = params.scale ?? (category === "Lower-body" ? 2.0 : RECOMMENDED_SCALE);
+      const seed = params.seed ?? 42;
+
+      const result = await ootdClient.predict("/process_dc", [
+        personFile,
+        garmentFile,
+        category,
+        1, // n_samples
+        steps,
+        scale,
+        seed,
+      ]);
+
+      const data = result.data as unknown as Array<Array<{ image?: string | { url?: string } }>>;
+      const firstOutput = data?.[0]?.[0]?.image;
+      const resultUrl = typeof firstOutput === "string" ? firstOutput : firstOutput?.url;
+
+      if (resultUrl) {
+        return {
+          success: true,
+          resultImageUrl: resultUrl,
+        };
+      }
+    } catch (err: unknown) {
+      console.error(`[runVirtualTryOn error with token ${tokenIndex + 1}/${tokens.length}]:`, err);
+      const rawMsg = err instanceof Error ? err.message : String(err);
+
+      if (rawMsg.includes("ZeroGPU quota") || rawMsg.includes("exceeded your free")) {
+        lastError = "Hugging Face ZeroGPU free compute quota reached due to rapid test generations. The rolling cooldown resets every few minutes. Please wait 1-2 minutes and try again.";
+        // If there's another token in the pool, continue loop to try it!
+        continue;
+      }
+
+      lastError = rawMsg;
     }
-
-    return {
-      success: true,
-      resultImageUrl: resultUrl,
-    };
-  } catch (err: unknown) {
-    console.error("[runVirtualTryOn error]:", err);
-    const message = err instanceof Error ? err.message : "Failed to process virtual try-on request.";
-    return {
-      success: false,
-      error: message,
-    };
   }
+
+  return {
+    success: false,
+    error: lastError,
+  };
 }
+
+

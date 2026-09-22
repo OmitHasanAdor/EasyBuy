@@ -16,11 +16,11 @@ import {
   Bookmark,
   BookmarkCheck,
   Check,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useCart } from "@/lib/cart-context";
-import { DEMO_AVATARS } from "@/lib/trial-room-presets";
 import BeforeAfterSlider from "./BeforeAfterSlider";
 import type { GarmentCategory } from "@/lib/tryon";
 
@@ -54,6 +54,67 @@ function inferCategory(product: TrialRoomProduct): GarmentCategory {
   return "Upper-body";
 }
 
+export type UserGalleryPhoto = {
+  id: string;
+  url: string;
+  label: string;
+};
+
+function getInitialUserPhotos(sessionUser?: { email?: string | null; image?: string | null }): UserGalleryPhoto[] {
+  const email = sessionUser?.email?.toLowerCase() || "";
+  const photos: UserGalleryPhoto[] = [];
+
+  if (email.includes("sophia")) {
+    photos.push(
+      {
+        id: "sophia-01",
+        url: "/trial-room/avatars/female/female-avatar-01-tank-jeans.png",
+        label: "Full-Body Front",
+      },
+      {
+        id: "sophia-02",
+        url: "/trial-room/avatars/female/female-avatar-09-white-slip-dress.png",
+        label: "Slip Dress Pose",
+      }
+    );
+  } else if (email.includes("marcus")) {
+    photos.push(
+      {
+        id: "marcus-01",
+        url: "/trial-room/avatars/male/male-avatar-01-athletic-tank-jeans.png",
+        label: "Athletic Front",
+      },
+      {
+        id: "marcus-02",
+        url: "/trial-room/avatars/male/male-avatar-02-asian-athletic-tank-jeans.png",
+        label: "Denim Pose",
+      }
+    );
+  } else if (email.includes("elena")) {
+    photos.push({
+      id: "elena-01",
+      url: "/trial-room/avatars/female/female-avatar-08-bobhair-tank-jeans.png",
+      label: "Studio Front",
+    });
+  } else if (sessionUser?.image) {
+    photos.push({
+      id: "profile-photo",
+      url: sessionUser.image,
+      label: "My Photo",
+    });
+  }
+
+  if (photos.length === 0) {
+    photos.push({
+      id: "default-pose",
+      url: "/trial-room/avatars/female/female-avatar-01-tank-jeans.png",
+      label: "Full-Body Front",
+    });
+  }
+
+  return photos;
+}
+
 export default function TrialRoomModal({
   isOpen,
   onClose,
@@ -69,6 +130,7 @@ export default function TrialRoomModal({
 
   const [category, setCategory] = useState<GarmentCategory>(() => inferCategory(product));
   const [personImage, setPersonImage] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<UserGalleryPhoto[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [resultImage, setResultImage] = useState<string | null>(null);
@@ -77,12 +139,34 @@ export default function TrialRoomModal({
   const [savedLook, setSavedLook] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-select user avatar from session when modal opens if not already selected
+  // Load personal photo gallery from localStorage or defaults
   useEffect(() => {
-    if (session?.user?.image && !personImage) {
-      setPersonImage(session.user.image);
+    if (!isOpen) return;
+    const storageKey = `easybuy_gallery_${session?.user?.id || session?.user?.email || "guest"}`;
+    let photos: UserGalleryPhoto[] = [];
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        photos = JSON.parse(saved);
+      }
+    } catch {
+      photos = [];
     }
-  }, [session?.user?.image, personImage]);
+
+    if (!photos || photos.length === 0) {
+      photos = getInitialUserPhotos(session?.user);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(photos));
+      } catch {
+        // ignore
+      }
+    }
+
+    setGallery(photos);
+    if (photos.length > 0 && !personImage) {
+      setPersonImage(photos[0].url);
+    }
+  }, [isOpen, session?.user, personImage]);
 
   // Reset/sync category when product changes
   const [prevProductId, setPrevProductId] = useState(product.id);
@@ -112,29 +196,75 @@ export default function TrialRoomModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, loading, onClose]);
 
-  // Handle local image file upload & convert to base64 Data URL
-  const handleFileUpload = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file (JPG, PNG, WebP).");
+  // Handle local image file upload, add to personal gallery & select
+  const handleFileUpload = useCallback(
+    (file: File) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file (JPG, PNG, WebP).");
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Image must be smaller than 10MB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        if (!dataUrl) return;
+
+        const newPhoto: UserGalleryPhoto = {
+          id: `custom-${Date.now()}`,
+          url: dataUrl,
+          label: `Photo ${gallery.length + 1}`,
+        };
+
+        const updated = [newPhoto, ...gallery];
+        setGallery(updated);
+        setPersonImage(dataUrl);
+        setResultImage(null);
+        setError(null);
+
+        const storageKey = `easybuy_gallery_${session?.user?.id || session?.user?.email || "guest"}`;
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(updated));
+        } catch {
+          // ignore
+        }
+
+        toast.success("Photo added to your personal try-on gallery!");
+      };
+      reader.onerror = () => {
+        toast.error("Failed to read image file.");
+      };
+      reader.readAsDataURL(file);
+    },
+    [gallery, session?.user]
+  );
+
+  // Remove a photo from personal gallery
+  const handleDeletePhoto = (photoId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (gallery.length <= 1) {
+      toast.error("You need at least one photo in your gallery.");
       return;
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be smaller than 10MB.");
-      return;
+    const updated = gallery.filter((p) => p.id !== photoId);
+    setGallery(updated);
+    const storageKey = `easybuy_gallery_${session?.user?.id || session?.user?.email || "guest"}`;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch {
+      // ignore
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPersonImage(reader.result as string);
+    if (personImage === gallery.find((p) => p.id === photoId)?.url) {
+      setPersonImage(updated[0]?.url || null);
       setResultImage(null);
-      setError(null);
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read image file.");
-    };
-    reader.readAsDataURL(file);
-  }, []);
+    }
+    toast.success("Photo removed from your gallery.");
+  };
 
   // Submit try-on request to server API
   const handleGenerateTryOn = async () => {
@@ -474,99 +604,112 @@ export default function TrialRoomModal({
                 <div className="lg:col-span-7 flex flex-col">
                   <div className="flex-1 rounded-2xl border border-[#E7DCC4] bg-white p-6 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-[#8E3D14]/80">
-                          Try-On Photo
-                        </p>
+                      {/* Header with Add Photo CTA */}
+                      <div className="flex items-center justify-between mb-2.5">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-[#8E3D14]/80">
+                            My Try-On Photos
+                          </p>
+                          <p className="text-[11px] text-[#5C4D44] mt-0.5">
+                            Select a photo from your private gallery or add a new pose
+                          </p>
+                        </div>
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-xs font-medium text-[#C05620] hover:underline inline-flex items-center gap-1"
+                          className="text-xs font-semibold text-[#C05620] hover:text-[#A84918] inline-flex items-center gap-1.5 rounded-lg border border-[#E7DCC4] bg-[#FAF7F2] px-2.5 py-1.5 hover:bg-white transition-all shadow-sm"
                         >
                           <UploadCloud className="h-3.5 w-3.5" />
-                          Upload Custom
+                          + Add Photo
                         </button>
                       </div>
 
-                      {/* Quick Model Selector Pills */}
-                      <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 pt-0.5">
-                        {session?.user?.image && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPersonImage(session.user.image!);
-                              setResultImage(null);
-                              setError(null);
-                            }}
-                            className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-all ${
-                              personImage === session.user.image
-                                ? "border-[#C05620] bg-[#C05620]/10 text-[#C05620] font-semibold ring-2 ring-[#C05620]/20"
-                                : "border-[#E7DCC4] bg-[#FAF7F2] text-[#5C4D44] hover:bg-white"
-                            }`}
-                          >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={session.user.image}
-                              alt="My Profile Photo"
-                              className="h-4 w-4 rounded-full object-cover"
-                            />
-                            <span>My Photo</span>
-                            {personImage === session.user.image && <Check className="h-3 w-3 text-[#C05620]" />}
-                          </button>
-                        )}
-
-                        {DEMO_AVATARS.map((avatar) => {
-                          const isSelected = personImage === avatar.imageUrl;
+                      {/* Photo Gallery Strip */}
+                      <div className="flex items-center gap-2 overflow-x-auto pb-2.5 pt-0.5">
+                        {gallery.map((photo) => {
+                          const isSelected = personImage === photo.url;
                           return (
-                            <button
-                              key={avatar.id}
-                              type="button"
+                            <div
+                              key={photo.id}
                               onClick={() => {
-                                setPersonImage(avatar.imageUrl);
+                                setPersonImage(photo.url);
                                 setResultImage(null);
                                 setError(null);
                               }}
-                              className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-all ${
+                              className={`group relative shrink-0 cursor-pointer rounded-xl border-2 transition-all p-0.5 ${
                                 isSelected
-                                  ? "border-[#C05620] bg-[#C05620]/10 text-[#C05620] font-semibold ring-2 ring-[#C05620]/20"
-                                  : "border-[#E7DCC4] bg-[#FAF7F2] text-[#5C4D44] hover:bg-white"
+                                  ? "border-[#C05620] ring-2 ring-[#C05620]/25 shadow-sm"
+                                  : "border-[#E7DCC4] hover:border-[#8E3D14]/40"
                               }`}
-                              title={avatar.description}
                             >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={avatar.imageUrl}
-                                alt={avatar.name}
-                                className="h-4 w-4 rounded-full object-cover"
-                              />
-                              <span>{avatar.name.split(" ")[0]}</span>
-                              {isSelected && <Check className="h-3 w-3 text-[#C05620]" />}
-                            </button>
+                              <div className="relative h-16 w-14 overflow-hidden rounded-lg bg-[#F7F2E7]">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={photo.url}
+                                  alt={photo.label}
+                                  className="h-full w-full object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-[#C05620]/20 flex items-center justify-center">
+                                    <div className="rounded-full bg-[#C05620] p-0.5 text-white shadow-sm">
+                                      <Check className="h-3 w-3 stroke-[3]" />
+                                    </div>
+                                  </div>
+                                )}
+                                {gallery.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDeletePhoto(photo.id, e)}
+                                    className="absolute top-0.5 right-0.5 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-black/70 text-white hover:bg-red-600 transition-colors"
+                                    title="Remove from gallery"
+                                  >
+                                    <Trash2 className="h-2.5 w-2.5" />
+                                  </button>
+                                )}
+                              </div>
+                              <p className="mt-0.5 max-w-[56px] truncate text-center text-[10px] font-medium text-[#5C4D44]">
+                                {photo.label}
+                              </p>
+                            </div>
                           );
                         })}
+
+                        {/* "+ Add" Card in gallery */}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="shrink-0 flex flex-col items-center justify-center h-[68px] w-14 rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] text-[#8E3D14] hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all"
+                          title="Upload a new photo to your gallery"
+                        >
+                          <UploadCloud className="h-4 w-4 text-[#C05620]" />
+                          <span className="text-[10px] font-semibold mt-1 text-[#C05620]">+ Add</span>
+                        </button>
                       </div>
 
+                      {/* Main Preview of Selected Photo */}
                       {personImage ? (
-                        <div className="relative h-64 sm:h-72 w-full overflow-hidden rounded-xl border border-[#E7DCC4] bg-[#F7F2E7]">
+                        <div className="relative h-60 sm:h-64 w-full overflow-hidden rounded-xl border border-[#E7DCC4] bg-[#F7F2E7] mt-1">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={personImage}
-                            alt="Uploaded user"
+                            alt="Selected Try-On Photo"
                             className="h-full w-full object-contain"
                           />
                           <button
                             type="button"
-                            onClick={() => setPersonImage(null)}
+                            onClick={() => {
+                              setPersonImage(null);
+                              setResultImage(null);
+                              setError(null);
+                            }}
                             className="absolute top-3 right-3 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
                             title="Remove photo"
                           >
                             <X className="h-4 w-4" />
                           </button>
-                          {/* Active avatar tag */}
-                          <div className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-                            {personImage === session?.user?.image
-                              ? "Profile Photo"
-                              : DEMO_AVATARS.find((a) => a.imageUrl === personImage)?.name || "Custom Photo"}
+                          {/* Bottom info pill */}
+                          <div className="absolute bottom-2 left-2 rounded-lg bg-black/65 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                            {gallery.find((p) => p.url === personImage)?.label || "Selected Photo"}
                           </div>
                         </div>
                       ) : (
@@ -579,10 +722,10 @@ export default function TrialRoomModal({
                             }
                           }}
                           onClick={() => fileInputRef.current?.click()}
-                          className="flex h-64 sm:h-72 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] p-6 text-center hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all"
+                          className="flex h-60 sm:h-64 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#E7DCC4] bg-[#FAF7F2] p-6 text-center hover:border-[#C05620] hover:bg-[#F7F2E7] transition-all mt-1"
                         >
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#C05620] shadow-sm mb-3">
-                            <UploadCloud className="h-7 w-7" />
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#C05620] shadow-sm mb-2.5">
+                            <UploadCloud className="h-6 w-6" />
                           </div>
                           <p className="text-sm font-semibold text-[#2B2420]">
                             Click or drag photo here to upload
@@ -590,7 +733,7 @@ export default function TrialRoomModal({
                           <p className="mt-1 text-xs text-[#8E3D14]/70">
                             PNG, JPG, or WebP up to 10MB
                           </p>
-                          <span className="mt-4 inline-flex items-center gap-1 rounded-full border border-[#E7DCC4] bg-white px-3 py-1 text-xs font-medium text-[#2B2420]">
+                          <span className="mt-3 inline-flex items-center gap-1 rounded-full border border-[#E7DCC4] bg-white px-3 py-1 text-xs font-medium text-[#2B2420]">
                             <ImageIcon className="h-3.5 w-3.5 text-[#C05620]" />
                             Select from device
                           </span>
