@@ -6,6 +6,7 @@ import { authFetch } from "@/lib/auth-fetch";
 import { API_URL } from "@/config/api";
 import { Check, Loader2 } from "lucide-react";
 
+
 type Props = {
   type: "product" | "variant";
   id: number;
@@ -81,6 +82,8 @@ export function StockEditor({ type, id, currentStock }: Props) {
           "Update"
         )}
       </button>
+
+    
     </div>
   );
 }
