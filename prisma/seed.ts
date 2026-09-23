@@ -8,13 +8,13 @@ const adapter = new PrismaPg({
 });
 const prisma = new PrismaClient({ adapter });
 
-async function main() {
+async function seedAdmin() {
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminEmail || !adminPassword) {
-        console.error("ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env");
-        process.exit(1);
+        console.warn("ADMIN_EMAIL and ADMIN_PASSWORD not set, skipping admin seed.");
+        return;
     }
 
     const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
@@ -41,6 +41,75 @@ async function main() {
     console.log("Admin role verified.");
 }
 
+const DEMO_BUYERS = [
+    {
+        name: "Sophia Vance",
+        email: "sophia.vance@easybuy.com",
+        password: "EasyBuy123!",
+        image: "/trial-room/avatars/female/female-avatar-01-tank-jeans.png",
+    },
+    {
+        name: "Marcus Chen",
+        email: "marcus.chen@easybuy.com",
+        password: "EasyBuy123!",
+        image: "/trial-room/avatars/male/male-avatar-01-athletic-tank-jeans.png",
+    },
+    {
+        name: "Elena Rostova",
+        email: "elena.rostova@easybuy.com",
+        password: "EasyBuy123!",
+        image: "/trial-room/avatars/female/female-avatar-08-bobhair-tank-jeans.png",
+    },
+];
+
+async function seedDemoBuyers() {
+    const { auth } = await import("../src/lib/auth");
+
+    for (const buyer of DEMO_BUYERS) {
+        const existing = await prisma.user.findUnique({ where: { email: buyer.email } });
+
+        if (!existing) {
+            await auth.api.signUpEmail({
+                body: {
+                    email: buyer.email,
+                    password: buyer.password,
+                    name: buyer.name,
+                    image: buyer.image,
+                },
+            });
+            console.log("Created demo buyer:", buyer.email, `(${buyer.name})`);
+        } else {
+            console.log("Demo buyer already exists:", buyer.email);
+        }
+
+        await prisma.user.update({
+            where: { email: buyer.email },
+            data: {
+                role: "buyer",
+                image: buyer.image,
+                status: "active",
+            },
+        });
+    }
+    console.log("✅ All demo buyers verified with avatars and credentials.");
+
+    // Also set avatar for existing demo buyer eshams05@gmail.com if present
+    const eshams = await prisma.user.findUnique({ where: { email: "eshams05@gmail.com" } });
+    if (eshams) {
+        await prisma.user.update({
+            where: { email: "eshams05@gmail.com" },
+            data: { image: "/trial-room/avatars/female/female-avatar-01-tank-jeans.png" },
+        });
+        console.log("Updated avatar for eshams05@gmail.com");
+    }
+}
+
+async function main() {
+    await seedAdmin();
+    await seedDemoBuyers();
+}
+
 main()
     .catch(console.error)
     .finally(() => prisma.$disconnect());
+

@@ -31,6 +31,7 @@ import {
   UserCog,
   type LucideIcon,
   User,
+  Sparkles,
 } from "lucide-react";
 
 export type Role = "buyer" | "seller" | "admin";
@@ -55,6 +56,7 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
         { label: "My Orders", href: "/dashboard/buyer/orders", icon: Package },
         { label: "Cart", href: "/dashboard/buyer/cart", icon: Truck },
         { label: "Wishlist", href: "/dashboard/buyer/wishlist", icon: Heart },
+        { label: "My AI Looks", href: "/dashboard/buyer/looks", icon: Sparkles },
         { label: "Browse Products", href: "/products", icon: LayoutGrid },
       ],
     },
