@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
@@ -12,8 +12,6 @@ import {
   Minus,
   Plus,
   Sparkles,
-  Loader2,
-  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -30,8 +28,6 @@ import { trackRecentlyViewed } from "@/lib/recently-viewed";
 import { isDiscountActive, unitPrice } from "@/lib/pricing";
 import TrialRoomModal from "@/components/trial-room/TrialRoomModal";
 import { isApparelProduct } from "@/lib/apparel";
-import { authFetch } from "@/lib/auth-fetch";
-import { authClient } from "@/lib/auth-client";
 
 const LOW_STOCK_THRESHOLD = 10;
 const NEW_WINDOW_DAYS = 3;
@@ -47,15 +43,6 @@ type ProductVariant = {
 export type ProductDetail = Product & {
   variants: ProductVariant[];
 };
-
-function getTrialMode(category: string): "try_on" | "in_room" | null {
-  const c = category.toLowerCase();
-  if (c.includes("home") || c.includes("lifestyle")) return "in_room";
-  if (c.includes("men") || c.includes("women") || c.includes("fashion")) {
-    return "try_on";
-  }
-  return null;
-}
 
 export default function ProductDetailClient({
   initialProduct,
@@ -73,7 +60,6 @@ export default function ProductDetailClient({
 
   const { addItem } = useCart();
   const { isWishlisted, toggle } = useWishlist();
-  const { data: session } = authClient.useSession();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -83,60 +69,9 @@ export default function ProductDetailClient({
   const [swiper, setSwiper] = useState<SwiperType | null>(null);
   const [now] = useState(() => Date.now());
 
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [trialFile, setTrialFile] = useState<File | null>(null);
-  const [trialPreview, setTrialPreview] = useState<string | null>(null);
-  const [trialResult, setTrialResult] = useState<string | null>(null);
-  const [trialLoading, setTrialLoading] = useState(false);
-
   useEffect(() => {
     if (product) trackRecentlyViewed(product.id);
   }, [product]);
-
-  function onPickTrialFile(file: File | null) {
-    setTrialResult(null);
-    setTrialFile(file);
-    setTrialPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return file ? URL.createObjectURL(file) : null;
-    });
-  }
-
-  async function runTrial() {
-    if (!session?.user) {
-      toast.error("Please sign in to use AI try-on");
-      return;
-    }
-    if (!trialFile || !product) return;
-
-    setTrialLoading(true);
-    setTrialResult(null);
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(trialFile);
-      });
-
-      const res = await authFetch(`${API_URL}/api/try-on`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, image: dataUrl }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(data.error || "Could not generate preview");
-        return;
-      }
-      setTrialResult(data.image as string);
-      toast.success("Preview ready");
-    } catch {
-      toast.error("Try-on failed. Please try again.");
-    } finally {
-      setTrialLoading(false);
-    }
-  }
 
   if (isLoading) return <Loading label="Loading product..." variant="full" />;
   if (isError || !product) {
@@ -147,7 +82,6 @@ export default function ProductDetailClient({
     );
   }
 
-  const trialMode = getTrialMode(product.category);
   const variants = product.variants ?? [];
   const hasVariants = !!product.hasVariants && variants.length > 0;
   const sizes = [
@@ -197,8 +131,8 @@ export default function ProductDetailClient({
   const isLowStock =
     availableStock > 0 && availableStock < LOW_STOCK_THRESHOLD;
   const isOutOfStock = availableStock === 0;
-
-  const images = product.images && product.images.length > 0 ? product.images : [];
+  const images =
+    product.images && product.images.length > 0 ? product.images : [];
   const isApparel = isApparelProduct(product);
   const wishlisted = isWishlisted(product.id);
 
@@ -285,7 +219,6 @@ export default function ProductDetailClient({
               )}
             </div>
 
-            {/* Quick Virtual Trial Room badge overlay */}
             {isApparel && images.length > 0 && (
               <button
                 type="button"
@@ -323,6 +256,7 @@ export default function ProductDetailClient({
                 No image available
               </div>
             )}
+
             {images.length > 1 && (
               <div className="mt-3 flex gap-2 overflow-x-auto">
                 {images.map((src, i) => (
@@ -340,7 +274,13 @@ export default function ProductDetailClient({
                     }`}
                     aria-label={`Select photo ${i + 1}`}
                   >
-                    <Image src={src} alt="" fill sizes="64px" className="object-cover" />
+                    <Image
+                      src={src}
+                      alt=""
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -464,13 +404,13 @@ export default function ProductDetailClient({
                 </button>
               </div>
             </div>
+
             <div className="mt-2 flex flex-col gap-3">
-              {/* Virtual Trial Room CTA */}
               {isApparel && (
                 <button
                   type="button"
                   onClick={() => setIsTrialRoomOpen(true)}
-                  className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-sm border border-[#C05620] bg-gradient-to-r from-[#FBF8F1] via-[#FFF8EE] to-[#FDF4E7] px-6 py-3 text-sm font-semibold text-[#8E3D14] shadow-xs transition-all duration-300 hover:border-[#8E3D14] hover:bg-[#8E3D14] hover:text-white hover:shadow-sm"
+                  className="group relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-sm border border-[#C05620] bg-linear-to-r from-[#FBF8F1] via-[#FFF8EE] to-[#FDF4E7] px-6 py-3 text-sm font-semibold text-[#8E3D14] shadow-xs transition-all duration-300 hover:border-[#8E3D14] hover:bg-[#8E3D14] hover:text-white hover:shadow-sm"
                 >
                   <Sparkles className="h-4 w-4 text-[#C05620] transition-transform duration-300 group-hover:scale-110 group-hover:text-white" />
                   <span>Virtual Trial Room — Try On with AI</span>
@@ -489,111 +429,28 @@ export default function ProductDetailClient({
                   <ShoppingCart className="h-4 w-4" strokeWidth={2} />
                   Add to Cart
                 </button>
-
                 <button
                   onClick={handleWishlist}
-                  aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                  aria-label={
+                    wishlisted ? "Remove from wishlist" : "Add to wishlist"
+                  }
                   aria-pressed={wishlisted}
                   className="flex h-12 w-12 items-center justify-center rounded-sm border border-[#2B2420] text-[#8E3D14] transition-colors hover:bg-[#F0E6D2]"
                 >
-                  <Heart className="h-5 w-5" strokeWidth={2} fill={wishlisted ? "#8E3D14" : "none"} />
+                  <Heart
+                    className="h-5 w-5"
+                    strokeWidth={2}
+                    fill={wishlisted ? "#8E3D14" : "none"}
+                  />
                 </button>
               </div>
             </div>
-
-            {trialMode && (
-              <div className="mt-6 rounded-lg border border-[#E7DCC4] bg-white p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#C05620]" />
-                  <h2 className="text-sm font-semibold text-[#2B2420]">
-                    {trialMode === "in_room" ? "See in my room" : "Try on me"}
-                  </h2>
-                </div>
-                <p className="mb-3 text-xs text-neutral-500">
-                  {trialMode === "in_room"
-                    ? "Upload a photo of your room. AI will place this product in the scene."
-                    : "Upload a clear photo of yourself. AI will show this item on you."}{" "}
-                  Preview only — not an exact fit.
-                </p>
-
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) =>
-                    onPickTrialFile(e.target.files?.[0] ?? null)
-                  }
-                />
-
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="inline-flex items-center gap-2 rounded-sm border border-[#E7DCC4] px-4 py-2.5 text-sm font-medium text-[#2B2420] hover:bg-[#F0E6D2]"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {trialFile ? "Change photo" : "Upload photo"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!trialFile || trialLoading}
-                    onClick={runTrial}
-                    className="inline-flex items-center gap-2 rounded-sm bg-[#C05620] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40"
-                  >
-                    {trialLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Generating…
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        Generate preview
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {(trialPreview || trialResult) && (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {trialPreview && (
-                      <div>
-                        <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
-                          Your photo
-                        </p>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={trialPreview}
-                          alt="Upload preview"
-                          className="max-h-64 w-full rounded-md object-contain bg-[#F2EADA]"
-                        />
-                      </div>
-                    )}
-                    {trialResult && (
-                      <div>
-                        <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
-                          AI preview
-                        </p>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={trialResult}
-                          alt="AI try-on result"
-                          className="max-h-64 w-full rounded-md object-contain bg-[#F2EADA]"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
         <ReviewSection productId={product.id} />
         <RelatedProducts productId={product.id} />
 
-        {/* Virtual Trial Room Modal */}
         <TrialRoomModal
           isOpen={isTrialRoomOpen}
           onClose={() => setIsTrialRoomOpen(false)}
