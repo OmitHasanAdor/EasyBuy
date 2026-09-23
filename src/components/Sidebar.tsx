@@ -1,9 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import {
   LayoutDashboard,
@@ -16,7 +16,6 @@ import {
   Wallet,
   Star,
   Settings,
-  // MessageSquareText,
   Bell,
   HelpCircle,
   LogOut,
@@ -32,6 +31,8 @@ import {
   type LucideIcon,
   User,
   Sparkles,
+  Menu,
+  X,
 } from "lucide-react";
 
 export type Role = "buyer" | "seller" | "admin";
@@ -63,19 +64,32 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
     {
       title: "Account",
       links: [
-        { label: "Profile Settings", href: "/dashboard/buyer/settings", icon: Settings },
-        { label: "Saved Addresses", href: "/dashboard/buyer/addresses", icon: MapPin },
-        { label: "Payment Methods", href: "/dashboard/buyer/payments", icon: CreditCard },
+        {
+          label: "Profile Settings",
+          href: "/dashboard/buyer/settings",
+          icon: Settings,
+        },
+        {
+          label: "Saved Addresses",
+          href: "/dashboard/buyer/addresses",
+          icon: MapPin,
+        },
+        {
+          label: "Payment Methods",
+          href: "/dashboard/buyer/payments",
+          icon: CreditCard,
+        },
         { label: "My Reviews", href: "/dashboard/buyer/reviews", icon: Star },
-        { label: "Notifications", href: "/dashboard/buyer/notifications", icon: Bell },
+        {
+          label: "Notifications",
+          href: "/dashboard/buyer/notifications",
+          icon: Bell,
+        },
       ],
     },
     {
       title: "Support",
-      links: [
-        // { label: "Messages", href: "/dashboard/buyer/messages", icon: MessageSquareText },
-        { label: "Help Center", href: "/help", icon: HelpCircle },
-      ],
+      links: [{ label: "Help Center", href: "/help", icon: HelpCircle }],
     },
   ],
 
@@ -84,27 +98,67 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
       title: "Store",
       links: [
         { label: "Overview", href: "/dashboard/seller", icon: LayoutDashboard },
-        { label: "My Products", href: "/dashboard/seller/products", icon: Package },
-        { label: "Add New Product", href: "/dashboard/seller/products/new", icon: PackagePlus },
-        { label: "Inventory", href: "/dashboard/seller/inventory", icon: Boxes },
-        { label: "Categories", href: "/dashboard/seller/categories", icon: Tags },
+        {
+          label: "My Products",
+          href: "/dashboard/seller/products",
+          icon: Package,
+        },
+        {
+          label: "Add New Product",
+          href: "/dashboard/seller/products/new",
+          icon: PackagePlus,
+        },
+        {
+          label: "Inventory",
+          href: "/dashboard/seller/inventory",
+          icon: Boxes,
+        },
+        {
+          label: "Categories",
+          href: "/dashboard/seller/categories",
+          icon: Tags,
+        },
         { label: "Profile", href: "/dashboard/seller/profile", icon: User },
       ],
     },
     {
       title: "Sales",
       links: [
-        { label: "Orders & Invoices", href: "/dashboard/seller/orders", icon: ClipboardList },
-        { label: "Sales Analytics", href: "/dashboard/seller/analytics", icon: BarChart3 },
-        { label: "Earnings & Payouts", href: "/dashboard/seller/earnings", icon: Wallet },
-        { label: "Customer Reviews", href: "/dashboard/seller/reviews", icon: Star },
+        {
+          label: "Orders & Invoices",
+          href: "/dashboard/seller/orders",
+          icon: ClipboardList,
+        },
+        {
+          label: "Sales Analytics",
+          href: "/dashboard/seller/analytics",
+          icon: BarChart3,
+        },
+        {
+          label: "Earnings & Payouts",
+          href: "/dashboard/seller/earnings",
+          icon: Wallet,
+        },
+        {
+          label: "Customer Reviews",
+          href: "/dashboard/seller/reviews",
+          icon: Star,
+        },
       ],
     },
     {
       title: "Account",
       links: [
-        { label: "Store Settings", href: "/dashboard/seller/settings", icon: Settings },
-        { label: "Notifications", href: "/dashboard/seller/notifications", icon: Bell },
+        {
+          label: "Store Settings",
+          href: "/dashboard/seller/settings",
+          icon: Settings,
+        },
+        {
+          label: "Notifications",
+          href: "/dashboard/seller/notifications",
+          icon: Bell,
+        },
         { label: "Help Center", href: "/help", icon: HelpCircle },
       ],
     },
@@ -114,28 +168,76 @@ const NAV_BY_ROLE: Record<Role, NavGroup[]> = {
     {
       title: "Overview",
       links: [
-        { label: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
-        { label: "Reports & Analytics", href: "/dashboard/admin/reports", icon: BarChart3 },
+        {
+          label: "Dashboard",
+          href: "/dashboard/admin",
+          icon: LayoutDashboard,
+        },
+        {
+          label: "Reports & Analytics",
+          href: "/dashboard/admin/reports",
+          icon: BarChart3,
+        },
       ],
     },
     {
       title: "Management",
       links: [
-        { label: "Buyer Management", href: "/dashboard/admin/buyers", icon: Users },
-        { label: "Seller Management", href: "/dashboard/admin/sellers", icon: Store },
-        { label: "Product Moderation", href: "/dashboard/admin/products", icon: ShieldCheck },
-        { label: "All Orders", href: "/dashboard/admin/orders", icon: ClipboardList },
-        { label: "Categories", href: "/dashboard/admin/categories", icon: Tags },
-        { label: "Review Moderation", href: "/dashboard/admin/reviews", icon: Star },
+        {
+          label: "Buyer Management",
+          href: "/dashboard/admin/buyers",
+          icon: Users,
+        },
+        {
+          label: "Seller Management",
+          href: "/dashboard/admin/sellers",
+          icon: Store,
+        },
+        {
+          label: "Product Moderation",
+          href: "/dashboard/admin/products",
+          icon: ShieldCheck,
+        },
+        {
+          label: "All Orders",
+          href: "/dashboard/admin/orders",
+          icon: ClipboardList,
+        },
+        {
+          label: "Categories",
+          href: "/dashboard/admin/categories",
+          icon: Tags,
+        },
+        {
+          label: "Review Moderation",
+          href: "/dashboard/admin/reviews",
+          icon: Star,
+        },
       ],
     },
     {
       title: "Platform",
       links: [
-        { label: "Payments & Transactions", href: "/dashboard/admin/payments", icon: Wallet },
-        { label: "Team & Roles", href: "/dashboard/admin/team", icon: UserCog },
-        { label: "Site Settings", href: "/dashboard/admin/settings", icon: Settings },
-        { label: "Notifications", href: "/dashboard/admin/notifications", icon: Bell },
+        {
+          label: "Payments & Transactions",
+          href: "/dashboard/admin/payments",
+          icon: Wallet,
+        },
+        {
+          label: "Team & Roles",
+          href: "/dashboard/admin/team",
+          icon: UserCog,
+        },
+        {
+          label: "Site Settings",
+          href: "/dashboard/admin/settings",
+          icon: Settings,
+        },
+        {
+          label: "Notifications",
+          href: "/dashboard/admin/notifications",
+          icon: Bell,
+        },
         { label: "Help Center", href: "/help", icon: HelpCircle },
       ],
     },
@@ -162,6 +264,11 @@ export default function Sidebar({
   const router = useRouter();
   const pathname = usePathname();
   const groups = NAV_BY_ROLE[role];
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   async function handleLogout() {
     await authClient.signOut();
@@ -169,9 +276,8 @@ export default function Sidebar({
     router.refresh();
   }
 
-  return (
-    <aside className="flex h-screen w-72 shrink-0 flex-col border-r border-[#E7DCC4] bg-[#F7F2E7]">
-      {/* Logo + role badge */}
+  const navContent = (
+    <>
       <div className="flex items-center gap-2.5 px-6 py-5">
         <Image
           src="/logo.png"
@@ -192,8 +298,7 @@ export default function Sidebar({
 
       <div className="mx-6 border-t border-[#E7DCC4]" />
 
-      {/* Nav groups */}
-      <nav className="flex-1 overflow-y-auto px-4 py-4">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {groups.map((group) => (
           <div key={group.title} className="mb-5">
             <p className="mb-1.5 px-2 text-[11px] font-bold uppercase tracking-[2px] text-[#8E3D14]/70">
@@ -207,10 +312,11 @@ export default function Sidebar({
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                        ? "bg-[#2B2420] text-[#F7F2E7]"
-                        : "text-[#3A342C] hover:bg-[#F0E6D2]"
-                        }`}
+                      className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-[#2B2420] text-[#F7F2E7]"
+                          : "text-[#3A342C] hover:bg-[#F0E6D2]"
+                      }`}
                     >
                       <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
                       {link.label}
@@ -225,7 +331,6 @@ export default function Sidebar({
 
       <div className="mx-6 border-t border-[#E7DCC4]" />
 
-      {/* Logout */}
       <div className="px-4 py-3">
         <button
           type="button"
@@ -237,7 +342,6 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* User profile footer */}
       <div className="flex items-center gap-3 border-t border-[#E7DCC4] px-6 py-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2B2420] text-xs font-bold text-[#F7F2E7]">
           {userName
@@ -256,6 +360,55 @@ export default function Sidebar({
           </span>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-[#E7DCC4] bg-[#F7F2E7] px-4 py-3 md:hidden">
+        <span className="font-serif text-sm font-medium text-[#2B2420]">
+          {ROLE_LABEL[role]} menu
+        </span>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="rounded-md p-2 text-[#2B2420] hover:bg-[#F0E6D2]"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close menu"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="absolute left-0 top-0 flex h-full w-[min(100%,18rem)] flex-col overflow-hidden bg-[#F7F2E7] shadow-xl">
+            <div className="flex justify-end px-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-md p-2 text-[#2B2420] hover:bg-[#F0E6D2]"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {navContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col overflow-hidden border-r border-[#E7DCC4] bg-[#F7F2E7] md:flex">
+        {navContent}
+      </aside>
+    </>
   );
 }
