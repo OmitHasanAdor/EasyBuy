@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Star, ImageOff } from "lucide-react";
+import { Heart, Star, ImageOff, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useWishlist } from "@/lib/wishlist";
 import MiniCountdown from "@/components/MiniCountdown";
 import { isDiscountActive, unitPrice } from "@/lib/pricing";
+import { isApparelProduct } from "@/lib/apparel";
 
 export type Product = {
   id: number;
@@ -42,6 +43,7 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
 
   // Get the cover image and average rating
   const coverImage = product.images?.[0] || null;
+  const isApparel = isApparelProduct(product);
 
   const reviewCount = product.reviews?.length ?? 0;
   const avgRating =
@@ -119,6 +121,15 @@ export default function ProductCard({ product, badge, variant = "default" }: Pro
         )}
         {variant === "sale" && product.saleEndsAt && (
           <MiniCountdown endsAt={product.saleEndsAt} />
+        )}
+        {isApparel && coverImage && (
+          <div
+            title="Eligible for Virtual AI Try-On"
+            className="absolute bottom-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full border border-white/20 bg-[#2B2420]/80 px-2 py-0.5 text-[10px] font-medium text-[#F7F2E7] shadow-sm backdrop-blur-md transition-all duration-200 group-hover:border-[#E7C182]/50 group-hover:bg-[#8E3D14]"
+          >
+            <Sparkles className="h-3 w-3 text-[#E7C182]" />
+            <span>AI Try-On</span>
+          </div>
         )}
       </div>
 

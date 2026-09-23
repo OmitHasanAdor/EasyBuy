@@ -42,3 +42,16 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# IDE and agent configs
+.agents/
+.claude/
+.cursor/
+.devin/
+.windsurf/
+skills-lock.json
+
+# Local implementation guides (not committed)
+VIRTUAL_TRIAL_ROOM_GUIDE.md
+
+

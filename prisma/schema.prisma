@@ -27,6 +27,7 @@ model User {
   sessions       Session[]
   accounts       Account[]
   sellerRequests SellerRequest[]
+  tryOnLooks     TryOnLook[]
 
   @@map("user")
 }
@@ -100,4 +101,17 @@ model Jwks {
   crv        String?
 
   @@map("jwks")
+}
+
+model TryOnLook {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   Int
+  productName String
+  imageUrl    String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("try_on_look")
 }

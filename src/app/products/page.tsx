@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { API_URL } from "@/config/api";
 import { ProductGridSkeleton } from "@/components/Loading";
 import ProductCard, { Product } from "@/components/ProductCard";
 import SearchFilterBar from "@/components/SearchFilterBar";
+import { isApparelProduct } from "@/lib/apparel";
 
 const NEW_WINDOW_DAYS = 3;
 
@@ -30,53 +32,66 @@ function getBadge(product: Product) {
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const search = searchParams.get("search") ?? "";
+  const initialCategory = searchParams.get("category") ?? "";
+  const initialTryOn = searchParams.get("tryon") === "true";
 
-  const [category, setCategory] = useState(searchParams.get("category") ?? "");
+  const [category, setCategory] = useState(initialCategory);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [tryOnOnly, setTryOnOnly] = useState(initialTryOn);
 
-  useEffect(() => {
-    setCategory(searchParams.get("category") ?? "");
-  }, [searchParams]);
+  // Sync state if searchParams change externally (e.g. user clicked nav link)
+  const [prevParams, setPrevParams] = useState({ category: initialCategory, tryon: initialTryOn });
+  if (prevParams.category !== initialCategory || prevParams.tryon !== initialTryOn) {
+    setPrevParams({ category: initialCategory, tryon: initialTryOn });
+    setCategory(initialCategory);
+    setTryOnOnly(initialTryOn);
+  }
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
+  const { data: products = [], isLoading: loading, isError: error } = useQuery<Product[]>({
+    queryKey: ["products", search, category, minPrice, maxPrice],
+    queryFn: async () => {
+      const params: Record<string, string> = {};
+      if (search) params.search = search;
+      if (category) params.category = category;
+      if (minPrice) params.minPrice = minPrice;
+      if (maxPrice) params.maxPrice = maxPrice;
 
-    const params: Record<string, string> = {};
-    if (search) params.search = search;
-    if (category) params.category = category;
-    if (minPrice) params.minPrice = minPrice;
-    if (maxPrice) params.maxPrice = maxPrice;
+      const res = await axios.get(`${API_URL}/api/products`, { params });
+      return res.data;
+    },
+  });
 
-    axios
-      .get(`${API_URL}/api/products`, { params })
-      .then((res) => setProducts(res.data))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [search, category, minPrice, maxPrice]);
+  const displayedProducts = tryOnOnly ? products.filter(isApparelProduct) : products;
 
   return (
     <section className="w-full bg-[#FBF8F1] px-6 py-16 sm:px-10 lg:px-16">
       <div className="mx-auto max-w-6xl">
         <h1 className="mb-2 font-serif text-3xl font-medium text-[#2B2420] sm:text-4xl">
-          {search ? `Results for "${search}"` : category || "All Products"}
+          {search
+            ? `Results for "${search}"`
+            : tryOnOnly
+              ? "AI Virtual Trial Room Apparel"
+              : category || "All Products"}
         </h1>
         <p className="mb-8 text-sm text-neutral-500">
-          {loading ? "Loading..." : `${products.length} product${products.length === 1 ? "" : "s"} found`}
+          {loading
+            ? "Loading..."
+            : `${displayedProducts.length} product${displayedProducts.length === 1 ? "" : "s"} found${
+                tryOnOnly ? " (eligible for AI Virtual Try-On)" : ""
+              }`}
         </p>
 
         <SearchFilterBar
           category={category}
           minPrice={minPrice}
           maxPrice={maxPrice}
+          tryOnOnly={tryOnOnly}
           onChange={(f) => {
             setCategory(f.category);
             setMinPrice(f.minPrice);
             setMaxPrice(f.maxPrice);
+            setTryOnOnly(!!f.tryOnOnly);
           }}
         />
 
@@ -84,13 +99,17 @@ export default function ProductsPage() {
 
         {error && <p className="text-sm text-neutral-500">Could not load products right now.</p>}
 
-        {!loading && !error && products.length === 0 && (
-          <p className="text-sm text-neutral-500">No products match these filters.</p>
+        {!loading && !error && displayedProducts.length === 0 && (
+          <p className="text-sm text-neutral-500">
+            {tryOnOnly
+              ? "No AI Try-On ready apparel items match these filters."
+              : "No products match these filters."}
+          </p>
         )}
 
-        {!loading && !error && products.length > 0 && (
+        {!loading && !error && displayedProducts.length > 0 && (
           <div className="grid grid-cols-2 gap-5 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
+            {displayedProducts.map((product) => (
               <ProductCard key={product.id} product={product} badge={getBadge(product)} />
             ))}
           </div>
