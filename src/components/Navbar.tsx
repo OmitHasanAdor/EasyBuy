@@ -25,7 +25,6 @@ export default function Navbar() {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id ?? null;
 
-  // Current user's role, taken from the session token (never looked up by email)
   const { data: me } = useQuery<CurrentUser | null>({
     queryKey: ["me", userId],
     queryFn: async () => {
@@ -36,22 +35,16 @@ export default function Navbar() {
   });
   const userRole = userId ? (me?.role ?? null) : null;
 
-  // Shared cache for category queries
   const { data: categories = [] } = useQuery<string[]>({
     queryKey: ["categories"],
     queryFn: () =>
       fetch(`${API_URL}/api/categories`).then((res) => res.json()),
   });
 
-  const navLinks = [
-    ...categories.map((category) => ({
-      label: category,
-      href: `/products?category=${encodeURIComponent(category)}`,
-    })),
-    ...(userRole === "buyer"
-      ? [{ label: "Sell on EasyBuy", href: "/dashboard/buyer/profile" }]
-      : []),
-  ];
+  const navLinks = categories.map((category) => ({
+    label: category,
+    href: `/products?category=${encodeURIComponent(category)}`,
+  }));
 
   const profileHref =
     userRole === "buyer"
@@ -62,8 +55,7 @@ export default function Navbar() {
           ? "/dashboard/admin/profile"
           : "/post-auth";
 
-  const loggedIn = Boolean(userId);
-  const finalProfileHref = !loggedIn
+  const finalProfileHref = !userId
     ? "/login"
     : userRole
       ? profileHref
@@ -71,63 +63,62 @@ export default function Navbar() {
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!search.trim()) return;
-
     router.push(`/products?search=${encodeURIComponent(search.trim())}`);
     setMobileOpen(false);
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#E7DCC4] bg-[#F7F2E7]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 sm:px-10 lg:px-16">
-        {/* Logo */}
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image
-            src="/logo.png"
-            alt="EasyBuy"
-            width={36}
-            height={36}
-            className="h-9 w-9 object-contain"
-            priority
-          />
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        {/* Left: Logo + AI Trial Room + Categories */}
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <Image
+              src="/logo.png"
+              alt="EasyBuy"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
+              priority
+            />
+            <span className="font-serif text-xl font-medium text-[#2B2420]">
+              EasyBuy
+            </span>
+          </Link>
 
-          <span className="font-serif text-xl font-medium text-[#2B2420]">
-            EasyBuy
-          </span>
-        </Link>
-
-        {/* Nav links - desktop */}
-        <nav className="hidden items-center gap-6 lg:flex">
+          {/* AI Trial Room - lg+ */}
           <Link
             href="/products?tryon=true"
-            className="group inline-flex items-center gap-1.5 rounded-full border border-[#C05620]/30 bg-[#C05620]/10 px-3 py-1 text-xs font-semibold text-[#8E3D14] transition-all hover:bg-[#8E3D14] hover:text-white"
+            className="group hidden shrink-0 items-center gap-1.5 rounded-full border border-[#C05620]/30 bg-[#C05620]/10 px-3 py-1 text-xs font-semibold text-[#8E3D14] transition-all hover:bg-[#8E3D14] hover:text-white lg:inline-flex"
           >
             <Sparkles className="h-3.5 w-3.5 text-[#C05620] transition-transform group-hover:rotate-12 group-hover:text-white" />
             <span>AI Trial Room</span>
-            <span className="rounded bg-[#C05620] px-1.5 py-0.2 text-[9px] font-bold text-white uppercase tracking-wider">
+            <span className="rounded bg-[#C05620] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
               NEW
             </span>
           </Link>
 
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-[#3A342C] transition-colors hover:text-[#C05620]"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+          {/* Categories - xl+ only */}
+          <nav className="hidden items-center gap-5 xl:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="whitespace-nowrap text-sm font-medium text-[#3A342C] transition-colors hover:text-[#C05620]"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-        {/* Search bar - desktop */}
+        {/* Center: Search (sm+) */}
         <form
           onSubmit={submitSearch}
-          className="relative hidden max-w-sm flex-1 items-center md:flex"
+          className="relative mx-2 hidden min-w-0 flex-1 max-w-50 items-center sm:flex sm:max-w-60 md:max-w-70 lg:max-w-[320px]"
         >
           <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-[#8E3D14]/70" />
-
           <input
             type="text"
             value={search}
@@ -137,26 +128,22 @@ export default function Navbar() {
           />
         </form>
 
-        {/* Icons */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Mobile search */}
+        {/* Right: Icons */}
+        <div className="flex shrink-0 items-center gap-1">
+          {/* Mobile search button */}
           <button
             aria-label="Search"
             onClick={() => setMobileOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] sm:hidden"
           >
             <Search className="h-5 w-5" strokeWidth={1.8} />
           </button>
 
-          {/* Wishlist - buyer only */}
+          {/* Wishlist */}
           {userRole === "buyer" && (
             <Link
               href="/dashboard/buyer/wishlist"
-              aria-label={
-                wishlistCount > 0
-                  ? `Wishlist (${wishlistCount})`
-                  : "Wishlist"
-              }
+              aria-label={wishlistCount > 0 ? `Wishlist (${wishlistCount})` : "Wishlist"}
               className="relative hidden h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] sm:flex"
             >
               <Heart
@@ -164,7 +151,6 @@ export default function Navbar() {
                 strokeWidth={1.8}
                 fill={wishlistCount > 0 ? "#8E3D14" : "none"}
               />
-
               {wishlistCount > 0 && (
                 <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C05620] text-[10px] font-bold text-[#F7F2E7]">
                   {wishlistCount > 99 ? "99+" : wishlistCount}
@@ -173,7 +159,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Cart - buyer only */}
+          {/* Cart */}
           {userRole === "buyer" && (
             <Link
               href="/dashboard/buyer/cart"
@@ -181,7 +167,6 @@ export default function Navbar() {
               className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2]"
             >
               <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
-
               {totalCount > 0 && (
                 <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C05620] text-[10px] font-bold text-[#F7F2E7]">
                   {totalCount > 99 ? "99+" : totalCount}
@@ -193,17 +178,17 @@ export default function Navbar() {
           {/* Profile */}
           <Link
             href={finalProfileHref}
-            className="ml-1 hidden items-center gap-1.5 rounded-full bg-[#2B2420] px-4 py-2 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 sm:flex"
+            className="ml-1 hidden items-center gap-1.5 rounded-full bg-[#2B2420] px-3 py-2 text-sm font-semibold text-[#F7F2E7] transition-opacity hover:opacity-90 sm:flex"
           >
             <User className="h-4 w-4" strokeWidth={2} />
             Profile
           </Link>
 
-          {/* Mobile menu toggle */}
+          {/* Mobile menu */}
           <button
             aria-label="Toggle menu"
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#2B2420] transition-colors hover:bg-[#F0E6D2] xl:hidden"
           >
             {mobileOpen ? (
               <X className="h-5 w-5" strokeWidth={1.8} />
@@ -216,14 +201,12 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-[#E7DCC4] bg-[#F7F2E7] px-6 py-4 lg:hidden">
-          {/* Mobile search */}
+        <div className="border-t border-[#E7DCC4] bg-[#F7F2E7] px-4 py-4 xl:hidden">
           <form
             onSubmit={submitSearch}
-            className="relative mb-4 flex items-center md:hidden"
+            className="relative mb-4 flex items-center sm:hidden"
           >
             <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-[#8E3D14]/70" />
-
             <input
               type="text"
               value={search}
@@ -234,7 +217,6 @@ export default function Navbar() {
           </form>
 
           <nav className="flex flex-col gap-1">
-            {/* AI Trial Room feature link */}
             <Link
               href="/products?tryon=true"
               onClick={() => setMobileOpen(false)}
@@ -248,7 +230,18 @@ export default function Navbar() {
                 NEW
               </span>
             </Link>
-            {/* Wishlist - buyer only */}
+
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="rounded-md px-2 py-2.5 text-sm font-medium text-[#3A342C] transition-colors hover:bg-[#F0E6D2] hover:text-[#C05620]"
+              >
+                {link.label}
+              </Link>
+            ))}
+
             {userRole === "buyer" && (
               <Link
                 href="/dashboard/buyer/wishlist"
@@ -263,7 +256,6 @@ export default function Navbar() {
                   />
                   Wishlist
                 </span>
-
                 {wishlistCount > 0 && (
                   <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
                     {wishlistCount > 99 ? "99+" : wishlistCount}
@@ -272,7 +264,6 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Cart - buyer only */}
             {userRole === "buyer" && (
               <Link
                 href="/dashboard/buyer/cart"
@@ -283,7 +274,6 @@ export default function Navbar() {
                   <ShoppingBag className="h-4 w-4" strokeWidth={1.8} />
                   Cart
                 </span>
-
                 {totalCount > 0 && (
                   <span className="rounded-full bg-[#C05620] px-2 py-0.5 text-[10px] font-bold text-white">
                     {totalCount > 99 ? "99+" : totalCount}
@@ -292,7 +282,6 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Profile */}
             <Link
               href={finalProfileHref}
               onClick={() => setMobileOpen(false)}
