@@ -1,0 +1,662 @@
+"use client"
+
+import { API_URL } from "@/config/api";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"
+import { Plus, Trash2 } from "lucide-react"
+import { MAX_DISCOUNT_PERCENT } from "@/lib/pricing"
+import { Sparkles, Loader2 } from "lucide-react";
+import { requestListingCopy } from "@/lib/listing-copilot";
+import { toast } from "sonner";
+import { TrendingUp } from "lucide-react";
+import { fetchPriceSense, type PriceSenseResult } from "@/lib/price-sense";
+
+type Variant = {
+  size: string
+  color: string
+  stock: string
+  price: string
+}
+
+type Props = {
+  token: string
+}
+
+export default function AddProductForm({ token }: Props) {
+  const router = useRouter()
+
+
+  const [notes, setNotes] = useState("");
+const [tags, setTags] = useState("");
+const [seoKeywords, setSeoKeywords] = useState("");
+const [aiLoading, setAiLoading] = useState(false);
+
+
+
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [price, setPrice] = useState("")
+  const [category, setCategory] = useState("")
+  const [image, setImage] = useState("")
+  const [stock, setStock] = useState("0")
+
+  const [hasVariants, setHasVariants] = useState(false)
+
+  const [discountPercent, setDiscountPercent] = useState("")
+  const [saleEndsAt, setSaleEndsAt] = useState("")
+
+  const [variants, setVariants] = useState<Variant[]>([])
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+const [priceSense, setPriceSense] = useState<PriceSenseResult | null>(null);
+const [priceSenseLoading, setPriceSenseLoading] = useState(false);
+
+useEffect(() => {
+  const cat = category.trim();
+  if (cat.length < 2) {
+    setPriceSense(null);
+    return;
+  }
+
+  const t = setTimeout(async () => {
+    setPriceSenseLoading(true);
+    try {
+      const data = await fetchPriceSense(cat);
+      setPriceSense(data);
+    } catch {
+      setPriceSense(null);
+    } finally {
+      setPriceSenseLoading(false);
+    }
+  }, 400); // debounce
+
+  return () => clearTimeout(t);
+}, [category]);
+
+async function runListingCopilot() {
+  setAiLoading(true);
+  try {
+    const result = await requestListingCopy({
+      name: name || undefined,
+      category: category || undefined,
+      price: price ? Number(price) : undefined,
+      notes: notes || undefined,
+    });
+    setName(result.title);
+    setDescription(result.description);
+    if (result.category) setCategory(result.category);
+    setTags(result.tags.join(", "));
+    setSeoKeywords(result.seoKeywords.join(", "));
+    toast.success("Title, description & category filled — set price & stock yourself");
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "AI generate failed");
+  } finally {
+    setAiLoading(false);
+  }
+}
+
+
+  function addVariant() {
+    setVariants([
+      ...variants,
+      {
+        size: "",
+        color: "",
+        stock: "0",
+        price: "",
+      },
+    ])
+  }
+
+  function removeVariant(index: number) {
+    setVariants(variants.filter((_, i) => i !== index))
+  }
+
+  function updateVariant(
+    index: number,
+    field: keyof Variant,
+    value: string
+  ) {
+    const updatedVariants = [...variants]
+
+    updatedVariants[index] = {
+      ...updatedVariants[index],
+      [field]: value,
+    }
+
+    setVariants(updatedVariants)
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    setError("")
+    setSuccess("")
+
+    if (!name.trim()) {
+      setError("Product name is required")
+      return
+    }
+
+    if (!description.trim()) {
+      setError("Description is required")
+      return
+    }
+
+    if (!price || Number(price) <= 0) {
+      setError("Price must be greater than 0")
+      return
+    }
+
+    if (!category.trim()) {
+      setError("Category is required")
+      return
+    }
+
+    if (!hasVariants && Number(stock) < 0) {
+      setError("Stock cannot be negative")
+      return
+    }
+
+    if (
+      discountPercent !== "" &&
+      (!Number.isInteger(Number(discountPercent)) ||
+        Number(discountPercent) < 0 ||
+        Number(discountPercent) > MAX_DISCOUNT_PERCENT)
+    ) {
+      setError(`Discount must be a whole number between 0 and ${MAX_DISCOUNT_PERCENT}%`)
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const data = {
+        name: name.trim(),
+        description: description.trim(),
+        price: Number(price),
+        category: category.trim(),
+
+        images: image.trim() ? [image.trim()] : [],
+
+        stock: hasVariants ? 0 : Number(stock),
+
+        hasVariants,
+
+        discountPercent:
+          discountPercent === ""
+            ? null
+            : Number(discountPercent),
+
+        saleEndsAt: saleEndsAt
+          ? new Date(saleEndsAt).toISOString()
+          : null,
+
+        variants: hasVariants
+          ? variants.map((variant) => ({
+              size: variant.size.trim() || null,
+              color: variant.color.trim() || null,
+              stock: Number(variant.stock),
+              price:
+                variant.price === ""
+                  ? null
+                  : Number(variant.price),
+            }))
+          : [],
+      }
+
+      const res = await fetch(
+        `${API_URL}/api/seller/products`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        }
+      )
+
+      const result = await res.json()
+
+      if (!res.ok) {
+        if (result.details?.length > 0) {
+          setError(result.details[0].message)
+        } else {
+          setError(result.error || "Failed to create product")
+        }
+
+        return
+      }
+
+      setSuccess("Product created successfully!")
+
+      setTimeout(() => {
+        router.push("/dashboard/seller/products")
+        router.refresh()
+      }, 800)
+    } catch (error) {
+      console.error("Create product error:", error)
+      setError("Something went wrong. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-4xl space-y-6"
+    >
+      {/* Basic Information */}
+      <div className="rounded-xl border border-[#E7DCC4] bg-white p-6">
+        <h2 className="font-serif text-lg font-medium text-[#2B2420]">
+          Basic Information
+        </h2>
+
+        <div className="mt-5 space-y-5">
+          {/* Name */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+              Product Name
+            </label>
+
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter product name"
+              className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+              Description
+            </label>
+
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe your product"
+              rows={5}
+              className="w-full resize-none rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+            />
+          </div>
+          <div className="rounded-lg border border-[#E7DCC4] bg-white p-4">
+  <div className="mb-2 flex items-center justify-between gap-2">
+    <div className="flex items-center gap-2">
+      <Sparkles className="h-4 w-4 text-[#C05620]" />
+      <p className="text-sm font-semibold text-[#2B2420]">ListingCopilot</p>
+    </div>
+    <button
+      type="button"
+      disabled={aiLoading}
+      onClick={runListingCopilot}
+      className="inline-flex items-center gap-2 rounded-sm bg-[#C05620] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+    >
+      {aiLoading ? (
+        <>
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Generating…
+        </>
+      ) : (
+        <>
+          <Sparkles className="h-3.5 w-3.5" />
+          Generate with AI
+        </>
+      )}
+    </button>
+  </div>
+  <p className="mb-2 text-xs text-neutral-500">
+    Enter a rough name, category, price, and optional notes — AI fills title &
+    description. Edit before publishing.
+  </p>
+  <textarea
+    value={notes}
+    onChange={(e) => setNotes(e.target.value)}
+    rows={2}
+    placeholder="Notes: linen, casual, summer, slim fit…"
+    className="w-full rounded-sm border border-[#E7DCC4] bg-[#FBF8F1] px-3 py-2 text-sm outline-none focus:border-[#C05620]"
+  />
+  {/* if you store tags / seo in DB later, show fields; else optional preview */}
+  {(tags || seoKeywords) && (
+    <p className="mt-2 text-[11px] text-neutral-500">
+      Tags: {tags || "—"} · SEO: {seoKeywords || "—"}
+    </p>
+  )}
+</div>
+
+          {/* Price + Category */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+                Price
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0"
+                className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+                Category
+              </label>
+
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="e.g. Clothing"
+                className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+              />
+            </div>
+          </div>
+
+          <div className="mt-2 rounded-md border border-[#E7DCC4] bg-[#FBF8F1] px-3 py-2">
+  <div className="flex items-center gap-2 text-xs font-semibold text-[#2B2420]">
+    <TrendingUp className="h-3.5 w-3.5 text-[#C05620]" />
+    PriceSense
+    {priceSenseLoading && (
+      <Loader2 className="h-3 w-3 animate-spin text-neutral-400" />
+    )}
+  </div>
+  <p className="mt-1 text-xs text-neutral-600">
+    {priceSense?.message ||
+      "Select or type a category to see typical prices on EasyBuy."}
+  </p>
+  {priceSense?.suggested != null && (
+    <button
+      type="button"
+      onClick={() => setPrice(String(priceSense.suggested))}
+      className="mt-2 text-xs font-semibold text-[#C05620] hover:underline"
+    >
+      Use suggested ৳{priceSense.suggested.toLocaleString()}
+    </button>
+  )}
+</div>
+
+          {/* Image */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+              Image URL
+            </label>
+
+            <input
+              type="url"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="https://example.com/product.jpg"
+              className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+            />
+
+            <p className="mt-1 text-xs text-[#8E3D14]/60">
+              Add a direct image URL.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Inventory */}
+      <div className="rounded-xl border border-[#E7DCC4] bg-white p-6">
+        <h2 className="font-serif text-lg font-medium text-[#2B2420]">
+          Inventory
+        </h2>
+
+        <div className="mt-5">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={hasVariants}
+              onChange={(e) => {
+                setHasVariants(e.target.checked)
+
+                if (!e.target.checked) {
+                  setVariants([])
+                }
+              }}
+              className="h-4 w-4"
+            />
+
+            <span className="text-sm font-medium text-[#2B2420]">
+              This product has variants
+            </span>
+          </label>
+
+          {!hasVariants ? (
+            <div className="mt-5">
+              <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+                Stock
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+                className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+              />
+            </div>
+          ) : (
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-[#2B2420]">
+                  Product Variants
+                </h3>
+
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="inline-flex items-center gap-2 rounded-md border border-[#E7DCC4] px-3 py-2 text-sm font-medium text-[#2B2420] hover:bg-[#F7F2E7]"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Variant
+                </button>
+              </div>
+
+              {variants.length === 0 && (
+                <div className="rounded-md border border-dashed border-[#E7DCC4] p-6 text-center">
+                  <p className="text-sm text-[#8E3D14]/70">
+                    No variants added yet.
+                  </p>
+                </div>
+              )}
+
+              {variants.map((variant, index) => (
+                <div
+                  key={index}
+                  className="rounded-lg border border-[#E7DCC4] bg-[#FBF8F1] p-4"
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Size */}
+                    <div>
+                      <label className="mb-2 block text-xs font-medium text-[#2B2420]">
+                        Size
+                      </label>
+
+                      <input
+                        type="text"
+                        value={variant.size}
+                        onChange={(e) =>
+                          updateVariant(
+                            index,
+                            "size",
+                            e.target.value
+                          )
+                        }
+                        placeholder="e.g. M"
+                        className="w-full rounded-md border border-[#E7DCC4] bg-white px-3 py-2 text-sm outline-none focus:border-[#8E3D14]"
+                      />
+                    </div>
+
+                    {/* Color */}
+                    <div>
+                      <label className="mb-2 block text-xs font-medium text-[#2B2420]">
+                        Color
+                      </label>
+
+                      <input
+                        type="text"
+                        value={variant.color}
+                        onChange={(e) =>
+                          updateVariant(
+                            index,
+                            "color",
+                            e.target.value
+                          )
+                        }
+                        placeholder="e.g. Black"
+                        className="w-full rounded-md border border-[#E7DCC4] bg-white px-3 py-2 text-sm outline-none focus:border-[#8E3D14]"
+                      />
+                    </div>
+
+                    {/* Stock */}
+                    <div>
+                      <label className="mb-2 block text-xs font-medium text-[#2B2420]">
+                        Stock
+                      </label>
+
+                      <input
+                        type="number"
+                        min="0"
+                        value={variant.stock}
+                        onChange={(e) =>
+                          updateVariant(
+                            index,
+                            "stock",
+                            e.target.value
+                          )
+                        }
+                        className="w-full rounded-md border border-[#E7DCC4] bg-white px-3 py-2 text-sm outline-none focus:border-[#8E3D14]"
+                      />
+                    </div>
+
+                    {/* Variant Price */}
+                    <div>
+                      <label className="mb-2 block text-xs font-medium text-[#2B2420]">
+                        Variant Price
+                      </label>
+
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={variant.price}
+                        onChange={(e) =>
+                          updateVariant(
+                            index,
+                            "price",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Optional"
+                        className="w-full rounded-md border border-[#E7DCC4] bg-white px-3 py-2 text-sm outline-none focus:border-[#8E3D14]"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(index)}
+                    className="mt-4 inline-flex items-center gap-2 text-sm text-red-600 hover:underline"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove variant
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Promotion */}
+      <div className="rounded-xl border border-[#E7DCC4] bg-white p-6">
+        <h2 className="font-serif text-lg font-medium text-[#2B2420]">
+          Promotion
+        </h2>
+
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          {/* Discount */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+              Discount Percentage
+            </label>
+
+            <input
+              type="number"
+              min="0"
+              max={MAX_DISCOUNT_PERCENT}
+              value={discountPercent}
+              onChange={(e) =>
+                setDiscountPercent(e.target.value)
+              }
+              placeholder={`0 - ${MAX_DISCOUNT_PERCENT}`}
+              className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+            />
+          </div>
+
+          {/* Sale Ends */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#2B2420]">
+              Sale Ends At
+            </label>
+
+            <input
+              type="datetime-local"
+              value={saleEndsAt}
+              onChange={(e) => setSaleEndsAt(e.target.value)}
+              className="w-full rounded-md border border-[#E7DCC4] px-3 py-2.5 text-sm outline-none focus:border-[#8E3D14]"
+            />
+          </div>
+        </div>
+
+        <p className="mt-5 text-xs text-[#8E3D14]/60">
+          The Best Seller badge is given by the EasyBuy team based on sales.
+        </p>
+      </div>
+
+      {/* Error / Success */}
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      {/* Submit */}
+      <div className="flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="rounded-md border border-[#E7DCC4] px-5 py-2.5 text-sm font-medium text-[#2B2420] hover:bg-[#F7F2E7]"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-md bg-[#2B2420] px-5 py-2.5 text-sm font-medium text-[#F7F2E7] transition hover:bg-[#3A342C] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Creating Product..." : "Create Product"}
+        </button>
+      </div>
+    </form>
+  )
+}

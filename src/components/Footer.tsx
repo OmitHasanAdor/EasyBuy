@@ -1,58 +1,41 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Globe } from "lucide-react";
-import {
-  FaInstagram,
-  FaFacebookF,
-  FaPinterestP,
-  FaYoutube,
-  FaApple,
-  FaGooglePlay,
-} from "react-icons/fa";
 
-const shopLinks = [
-  "Gift cards",
-  "Brand Registry",
-  "Sitemap",
-  "Blog",
-  "United Kingdom",
-  "Germany",
-  "Canada",
+type FooterLink = { label: string; href: string };
+
+// Only pages that exist. Links for things that aren't built yet (apps,
+// social accounts, legal pages, ...) stay out of the footer until they are.
+const shopLinks: FooterLink[] = [
+  { label: "All products", href: "/products" },
+  { label: "Trending", href: "/trending" },
+  { label: "Best sellers", href: "/best-sellers" },
+  { label: "Flash sale", href: "/flash-sale" },
+];
+const sellLinks: FooterLink[] = [
+  { label: "Sell on EasyBuy", href: "/dashboard/buyer/profile" },
+  { label: "Seller FAQ", href: "/help" },
+];
+const aboutLinks: FooterLink[] = [{ label: "Our story", href: "/about" }];
+const helpLinks: FooterLink[] = [
+  { label: "Help Center", href: "/help" },
+  { label: "Contact support", href: "mailto:support@easybuy.com" },
 ];
 
-const sellLinks = ["Sell with us", "Teams", "Forums", "Affiliates & Creators"];
-
-const aboutLinks = [
-  "EasyBuy, Inc.",
-  "Policies",
-  "Investors",
-  "Careers",
-  "Press",
-  "Impact",
-  "Legal imprint",
-];
-
-const helpLinks = ["Help Center", "Privacy settings"];
-
-const bottomLinks = [
-  "Terms of Use",
-  "Privacy",
-  "Interest-based ads",
-  "Local Shops",
-  "Regions",
-];
-
-function FooterColumn({ title, links }: { title: string; links: string[] }) {
+function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
   return (
-    <div className="min-w-40">
-      <h3 className="mb-4 text-sm font-bold text-[#2B2420]">{title}</h3>
+    <div className="min-w-36">
+      <h3 className="mb-5 text-[11px] font-bold uppercase tracking-[3px] text-[#2B2420]">
+        {title}
+      </h3>
       <ul className="flex flex-col gap-3">
         {links.map((link) => (
-          <li key={link}>
+          <li key={link.label}>
             <Link
-              href="#"
-              className="text-[15px] text-[#5B5145] transition-colors hover:text-[#C05620] hover:underline"
+              href={link.href}
+              className="text-[14.5px] text-[#5B5145] transition-colors duration-200 hover:text-[#C05620]"
             >
-              {link}
+              {link.label}
             </Link>
           </li>
         ))}
@@ -63,82 +46,57 @@ function FooterColumn({ title, links }: { title: string; links: string[] }) {
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#F7F2E7] px-6 pb-6 pt-14 sm:px-10 lg:px-16">
-      {/* Mission headline */}
-      <h2 className="mb-10 max-w-xl font-serif text-4xl font-medium leading-tight text-[#2B2420] sm:text-[44px]">
-        We&apos;re on a mission to
-        <br />
-        keep <em className="font-light italic text-[#C05620]">commerce</em>{" "}
-        human.
-      </h2>
+    <footer className="w-full bg-[#F7F2E7] px-6 pb-8 pt-16 sm:px-10 lg:px-16">
+      <div className="mx-auto max-w-7xl">
 
-      {/* Link columns */}
-      <div className="mb-12 flex flex-wrap gap-12">
-        <FooterColumn title="Shop" links={shopLinks} />
-        <FooterColumn title="Sell" links={sellLinks} />
-        <FooterColumn title="About" links={aboutLinks} />
-        <FooterColumn title="Help" links={helpLinks} />
-      </div>
+        {/* ── Top row: mission + columns ── */}
+        <div className="mb-16 flex flex-col gap-14 lg:flex-row lg:justify-between">
 
-      {/* App badges */}
-      <div className="mb-14 flex flex-wrap gap-3">
-        <Link
-          href="#"
-          className="flex items-center gap-2 rounded-lg bg-[#2B2420] px-4 py-2 text-[#F7F2E7] transition-opacity hover:opacity-90"
-        >
-          <FaApple size={22} />
-          <span className="leading-tight">
-            <span className="block text-[11px]">Download on the</span>
-            <span className="block text-base font-semibold">App Store</span>
-          </span>
-        </Link>
-        <Link
-          href="#"
-          className="flex items-center gap-2 rounded-lg bg-[#2B2420] px-4 py-2 text-[#F7F2E7] transition-opacity hover:opacity-90"
-        >
-          <FaGooglePlay size={20} />
-          <span className="leading-tight">
-            <span className="block text-[11px]">GET IT ON</span>
-            <span className="block text-base font-semibold">Google Play</span>
-          </span>
-        </Link>
-      </div>
-
-      <hr className="mb-5 border-t border-[#E7DCC4]" />
-
-      {/* Bottom bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[#5B5145]">
-        <div className="flex flex-wrap items-center gap-5">
-          <span className="flex items-center gap-1.5">
-            <Globe size={16} className="text-[#8E3D14]" />
-            Bangladesh
-          </span>
-          <Link href="#" aria-label="Instagram" className="transition-colors hover:text-[#C05620]">
-            <FaInstagram size={18} />
-          </Link>
-          <Link href="#" aria-label="Facebook" className="transition-colors hover:text-[#C05620]">
-            <FaFacebookF size={18} />
-          </Link>
-          <Link href="#" aria-label="Pinterest" className="transition-colors hover:text-[#C05620]">
-            <FaPinterestP size={18} />
-          </Link>
-          <Link href="#" aria-label="YouTube" className="transition-colors hover:text-[#C05620]">
-            <FaYoutube size={18} />
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-5">
-          <span>© {new Date().getFullYear()} EasyBuy, Inc.</span>
-          {bottomLinks.map((link) => (
-            <Link
-              key={link}
-              href="#"
-              className="transition-colors hover:text-[#C05620] hover:underline"
-            >
-              {link}
+          {/* Mission block */}
+          <div className="max-w-sm shrink-0">
+            {/* Logo + wordmark */}
+            <Link href="/" className="mb-8 inline-flex items-center gap-2.5">
+              <Image
+                src="/logo.png"
+                alt="EasyBuy"
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+              />
+              <span className="font-serif text-xl font-medium text-[#2B2420]">
+                EasyBuy
+              </span>
             </Link>
-          ))}
+
+            <h2 className="font-serif text-3xl font-medium leading-[1.15] text-[#2B2420] sm:text-[36px]">
+              We&apos;re on a mission to keep{" "}
+              <em className="font-medium not-italic text-[#C05620]">commerce</em>{" "}
+              human.
+            </h2>
+          </div>
+
+          {/* Link columns */}
+          <div className="flex flex-wrap gap-x-12 gap-y-10">
+            <FooterColumn title="Shop" links={shopLinks} />
+            <FooterColumn title="Sell" links={sellLinks} />
+            <FooterColumn title="About" links={aboutLinks} />
+            <FooterColumn title="Help" links={helpLinks} />
+          </div>
         </div>
+
+        {/* ── Divider ── */}
+        <hr className="border-t border-[#E7DCC4]" />
+
+        {/* ── Bottom bar ── */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-5 text-[13px] text-[#5B5145]">
+          <span className="flex items-center gap-1.5">
+            <Globe size={15} className="text-[#8E3D14]" />
+            Delivering across Bangladesh
+          </span>
+
+          <span>© {new Date().getFullYear()} EasyBuy</span>
+        </div>
+
       </div>
     </footer>
   );

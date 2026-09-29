@@ -29,20 +29,14 @@ export type OrderItem = {
 
 export type Order = {
   id: number;
-  status: string;
+  userId: string;
   total: number;
+  status: string;
+  paymentMethod: string | null;
+  paymentStatus: string;
   createdAt: string;
-  paymentStatus?: string | null;   // "UNPAID" | "PAID" | "FAILED"
-  paymentMethod?: string | null; // "COD" | "SSLCOMMERZ"
-  items: {
-    id: number;
-    quantity: number;
-    price: number;
-    product: {
-      name: string;
-      images: string[];
-    };
-  }[];
+  updatedAt: string;
+  items: OrderItem[];
 };
 
 export const metadata: Metadata = {

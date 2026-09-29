@@ -41,7 +41,7 @@ export default function BestSellersPage() {
   return (
     <main className="min-h-screen w-full bg-[#FBF8F1]">
       {/* Header banner */}
-      <section className="relative w-full overflow-hidden bg-linear-to-b from-[#C05620] to-[#A8471C] pb-24 pt-20">
+      <section className="relative w-full overflow-hidden bg-gradient-to-b from-[#C05620] to-[#A8471C] pb-24 pt-20">
 
         {SPARKLES.map((s, i) => (
           <motion.span
